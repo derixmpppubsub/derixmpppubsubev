@@ -6,7 +6,11 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import com.hp.hpl.jena.query.Query;
@@ -27,6 +31,7 @@ import com.hp.hpl.jena.vocabulary.XSD;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.deri.any23.extractor.ExtractionException;
 import org.deri.xmpppubsub.*;
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -40,6 +45,7 @@ import org.jivesoftware.smack.filter.PacketIDFilter;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Registration;
+import org.jivesoftware.smackx.pubsub.Item;
 import org.jivesoftware.smackx.pubsub.LeafNode;
 
 import org.deri.xmpppubsub.*;
@@ -50,15 +56,15 @@ import org.deri.xmpppubsub.*;
  *
  */
 public class PubSubEval {
-    private XMPPConnection connection;
+	private String xmppServer;
+	private int xmppPort;
     static Namespace nm = new Namespace();
     // TODO use Junit
     static Logger logger = Logger.getLogger(PubSubEval.class);
 
-    public void connect(String xmppServer, int port) throws XMPPException {
-        ConnectionConfiguration config = new ConnectionConfiguration(xmppServer,port);
-        connection = new XMPPConnection(config);
-        connection.connect();
+    public PubSubEval(String xmppServer, int xmppPort) {
+    	this.xmppServer = xmppServer;
+    	this.xmppPort = xmppPort;
     }
     
     /**
@@ -66,27 +72,59 @@ public class PubSubEval {
      * @param password the password.
      * @throws XMPPException if an error occurs creating the account.
      */
-    public void createAccount(String username, String password) throws XMPPException {
-        logger.info("in createaccount");
-        if (!connection.isConnected())
-            connection.connect();
-        try {
-            connection.login(username, password);
-            logger.info("already logged in");
-        } catch (XMPPException e) {
-            connection.getAccountManager().createAccount(username, password);
-            connection.login(username, password,"PubSubEval");
-            logger.info("logged in");
-        } catch (IllegalStateException e) {
-            
+//    public void createAccount(String username, String password) throws XMPPException {
+//        logger.debug("in createaccount");
+//        if (!connection.isConnected())
+//            connection.connect();
+//        try {
+//            connection.login(username, password);
+//            logger.debug("already logged in");
+//        } catch (XMPPException e) {
+//            connection.getAccountManager().getAccountAttributes();
+//            
+//            connection.getAccountManager().createAccount(username, password);
+//            connection.login(username, password,"PubSubEval");
+//            logger.debug("logged in");
+//        } catch (IllegalStateException e) {
+//            
+//        }
+    public void createAccount(String userName, String password) throws XMPPException {
+        ConnectionConfiguration config = new ConnectionConfiguration(xmppServer);  
+    	XMPPConnection connection = new XMPPConnection(config);
+		connection.connect();
+		try {
+			connection.getAccountManager().createAccount(userName, password);
+		} catch(XMPPException e) {
+			// account already created
+		}
+		connection.disconnect();
+    }
+    
+    public void createAccounts(HashMap<String, String> jids) throws XMPPException  {
+        for (String userName : jids.keySet()) {
+        	this.createAccount(userName, jids.get(userName));
         }
+    }
+    
+    public Model extractNTriples(String fileName) {
+        Model model = ModelFactory.createDefaultModel();
+        InputStream in = FileManager.get().open( fileName );
+        if (in == null) {
+            throw new IllegalArgumentException(
+                                         "File: " + fileName + " not found");
+        }
+        // FIXME: check serialization?
+        model.read(in, null,"N-TRIPLE");
+        logger.debug("NTriples in file " + fileName);
+        model.write(System.out);   
+        return model;
+        
     }
         
     public String extractJID(String employeeURI) {
 //        String jid = employeeURI.split(nm.namespace("ert"))[1];
-//        logger.info(employeeURI.split("http://www.cisco.com/ert/"));
-        logger.info("in extractjid");
-        String jid = employeeURI.replace("http://ecp-alpha/semantic/employee/", "");
+//        logger.debug(employeeURI.split("http://www.cisco.com/ert/"));
+        String jid = "u" + employeeURI.replace("http://ecp-alpha/semantic/employee/", "");
         logger.debug("Employee JID");
         logger.debug(jid);
         return jid;
@@ -102,20 +140,6 @@ public class PubSubEval {
 //        return tags;
 //    }
 
-    public Model extractN3(String fileName) {
-        logger.info(fileName);
-        Model model = ModelFactory.createDefaultModel();
-        InputStream in = FileManager.get().open( fileName );
-        if (in == null) {
-            throw new IllegalArgumentException(
-                                         "File: " + fileName + " not found");
-        }
-        // FIXME: check serialization?
-        model.read(in, null,"N-TRIPLE");
-        model.write(System.out);   
-        return model;
-        
-    }
 
     public ArrayList<String> extractEmployees(Model model) {
         ArrayList<String> employees = new ArrayList<String>();
@@ -126,22 +150,31 @@ public class PubSubEval {
                 "SELECT ?emp WHERE {" +
                 "?emp a cisco:Employee ." +
                 "}" ;         
-        logger.info("Execute query=\n"+queryString) ;
+        logger.debug("Execute query=\n"+queryString) ;
         Query query = QueryFactory.create(queryString) ;
         QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
         try {
           ResultSet results = qexec.execSelect() ;
-          logger.info("Employees query result");
-//          ResultSetFormatter.out(System.out, results, query) ;
           for ( ; results.hasNext() ; ) {
             QuerySolution soln = results.nextSolution() ;
             Resource r = soln.getResource("emp") ; // Get a result variable - must be a resource
             employees.add(r.getURI());
-            logger.info("Employee URI");
-            logger.info(r.getURI());
+            logger.debug("Employee URI");
+            logger.debug(r.getURI());
           }
         } finally { qexec.close() ; }
         return employees;
+    }
+    
+    public HashMap<String, String> createJIDsHash(ArrayList<String> employees) {
+    	HashMap<String, String> jids = new HashMap<String, String>();
+        for (String employee: employees) {
+            String jid = this.extractJID(employee);
+            String pass = jid+"pass";
+            jids.put(jid, pass);
+            logger.debug("The employee " + employee + "jid is " + jid);
+        }
+		return jids;
     }
     
     public ArrayList<String> extractPosts(Model model) {
@@ -151,22 +184,22 @@ public class PubSubEval {
         String queryString = prolog +
                 "SELECT ?post WHERE {" +
                 "?post a sioc:Post .}" ;        
-        logger.info("Execute query=\n"+queryString) ;
+        logger.debug("Execute query=\n"+queryString) ;
         Query query = QueryFactory.create(queryString) ;
         QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
         try {
           ResultSet results = qexec.execSelect() ;
-          logger.info("Posts query result");
+//          logger.debug("Posts query result");
 //          ResultSetFormatter.out(System.out, results, query) ;
           for ( ; results.hasNext() ; )
           {
             QuerySolution soln = results.nextSolution() ;
             Resource r = soln.getResource("post") ; // Get a result variable - must be a resource
             posts.add(r.getURI());
-            logger.info(r.getURI());
+            logger.debug(r.getURI());
           }
         } finally { qexec.close() ; }
-        logger.info(posts);
+        logger.debug(posts);
         return posts;
     }
 
@@ -176,18 +209,17 @@ public class PubSubEval {
         String jid;
         String prolog = "PREFIX rdf: <"+RDF.getURI()+"> \n" ;
         prolog += "PREFIX dc: <"+DC.getURI()+"> \n" ;
-        prolog += nm.prefix("sioc")+"> \n";
+        prolog += nm.prefix("sioc")+" \n";
         String queryString = prolog +
                 "SELECT ?emp WHERE {" +
-                post + " a sioc:Post ;" +
+                "<" + post + "> a sioc:Post ;" +
                 		"dc:creator ?emp" +
-                "}" ;        
+                "}" ;      
+        logger.debug("Executed query=\n"+queryString) ;  
         Query query = QueryFactory.create(queryString) ;
         QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
         try {
           ResultSet results = qexec.execSelect() ;
-          logger.info("Post JID query result");
-          ResultSetFormatter.out(System.out, results, query) ;
           for ( ; results.hasNext() ; )           {
             QuerySolution soln = results.nextSolution() ;
             Resource r = soln.getResource("emp") ; // Get a result variable - must be a resource
@@ -199,81 +231,129 @@ public class PubSubEval {
         return jid;
         
     }
+    public HashMap<String, String> createNodesHash (Model postsModel, ArrayList<String> posts) {
+    	HashMap<String, String> postsHash = new HashMap<String, String>();
+	    for (String post: posts) {
+	        //FIXME: get tags
+	        //String[] tags = getTagsFromPost(post);
+	        String jid = this.extractPostJID(postsModel, post);
+	        String postData = this.extractPostData(postsModel, post);
+	        logger.debug("jid " + jid + " post data" + postData);
+	        postsHash.put(jid, postData);
+	    }
+	    return postsHash;
+    	
+    }
     
+    public void publishPosts(HashMap<String, String> postsHash) throws XMPPException, IOException, ExtractionException, QueryTypeException{
+        for (String nodeName : postsHash.keySet()) {
+	        String pass = nodeName+"pass";
+	        Publisher p = new Publisher(nodeName, pass, this.xmppServer);
+	        LeafNode node = p.getOrCreateNode(nodeName);
+	        //FIXME get tags from post and add tags to node
+	        logger.debug("node " + nodeName + " got or created");
+		    SPARQLQuery query = new SPARQLQuery(postsHash.get(nodeName));
+	        p.publish(node, query.toXML());
+	        p.disconnect();
+	    }
+}
+    public String extractPostData(Model model, String post) {
+        String postData;
+        StringWriter dataWriter = new StringWriter();
+        String prolog = "PREFIX rdf: <"+RDF.getURI()+"> \n" ;
+        prolog += "PREFIX dc: <"+DC.getURI()+"> \n" ;
+        prolog += nm.prefix("sioc")+" \n";
+        String queryString = prolog +
+                "CONSTRUCT   { <" + post + "> ?p ?o }" +
+                "WHERE {" +
+                "<" + post + "> a sioc:Post ;" +
+                		"?p ?o" +
+                "}" ;      
+        logger.debug("Execute query=\n"+queryString) ;  
+        Query query = QueryFactory.create(queryString) ;
+        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        Model resultModel = qexec.execConstruct() ;
+        qexec.close() ; 
+        resultModel.write(dataWriter, "N-TRIPLE");
+        postData = dataWriter.toString();
+        logger.debug("postData " + postData);
+        return postData;
+        
+    }    
+    
+    public void subscribeToNodes(HashMap<String, String> jids, ArrayList<String> nodeNames) throws XMPPException{
+        for (String jidaccount : jids.keySet()) {
+            Subscriber s = new Subscriber(jidaccount, jids.get(jidaccount), xmppServer, xmppPort);
+            //FIXME needed to get all nodes with the s connection?
+            //s.mgr.discoverNodes()
+            for (String nodeName: nodeNames) {
+         	   if (!nodeName.equals(jidaccount) ) {
+	            	   LeafNode node = s.getNode(nodeName);
+	            	   logger.debug("subscribing jid " + jidaccount + "to node " + nodeName);
+	            	   node.subscribe(jidaccount + "@" + xmppServer);
+		       		   List its = node.getItems(1);
+		    			
+		    		   Iterator itr = its.iterator();
+		    			
+		    		   while (itr.hasNext()){
+		    			   Item it = (Item) itr.next();
+		    			   System.out.println(it.toString());
+		    		   }
+         	   }
+            }
+            //s.disconnect
+        }
+    }
     public static void main(String[] args){
         try {
             // Set up a simple configuration that logs on the console.
             BasicConfigurator.configure();
             
             //logger.setLevel(Level.DEBUG);
-            logger.info("Entering application.");
+            logger.debug("Entering application.");
     
             // turn on the enhanced debugger
             XMPPConnection.DEBUG_ENABLED = true;
         
-            // open the file and read data
+            // get configuration file data
             Properties prop = new Properties();
             File file = new File("config/xmpppubsub.properties");
             String filePath = file.getCanonicalPath();
-            logger.info(filePath);
+            logger.debug(filePath);
             InputStream is = new FileInputStream(filePath);
             prop.load(is);
-            String xmppserver = prop.getProperty("xmppserver");
-            int port = Integer.parseInt(prop.getProperty("port")); 
-//            String xmppserver="foo";
-//            String port="bar";
-            // FIXME get file name from args?
+            
+            String xmppServer = prop.getProperty("xmppserver");
+            int xmppPort = Integer.parseInt(prop.getProperty("port")); 
+
+            // parse input args
             String postsFileName = args[0];
             String employeesFileName = args[1];
             
-            PubSubEval eval = new PubSubEval();
-            eval.connect(xmppserver, port);
+            PubSubEval eval = new PubSubEval(xmppServer, xmppPort);
             
-            // create accounts for all employees
-            Model employeesModel = eval.extractN3(employeesFileName);
+            // extract employees
+            Model employeesModel = eval.extractNTriples(employeesFileName);           
             ArrayList<String> employees = eval.extractEmployees(employeesModel);
-            logger.info("Employees parsed");
-            for (String employee: employees) {
-                logger.info("Extracting jid for employee");
-                logger.info(employee);
-                String jid = eval.extractJID(employee);
-                logger.info(jid);
-                String pass = jid+"pass";
-                eval.createAccount(jid, pass);
-            }
+            HashMap<String, String> jids = eval.createJIDsHash(employees);
+            // create Jabber accounts for the employees 
+            //eval.createAccounts(jids);
             
-            // create nodes
-            Model postsModel = eval.extractN3(postsFileName);
+            
+            // extract posts
+            Model postsModel = eval.extractNTriples(postsFileName);
             ArrayList<String> posts = eval.extractPosts(postsModel);
-            ArrayList<LeafNode> allNodes = new ArrayList<LeafNode>();
-            logger.info("Posts parsed");
-            for (String post: posts) {
-                //FIXME: get tags
-                //String[] tags = getTagsFromPost(post);
-                String jid = eval.extractPostJID(postsModel, post);
-                String pass = jid+"pass";
-                Publisher p = new Publisher(jid, pass, xmppserver);
-                LeafNode node = p.getOrCreateNode(jid);
-                allNodes.add(node);
-                //FIXME get tags from post and add tags to node
-//              node.send(post)?
             
-           // create subscribers
-           for (String employee: employees) {
-               //FIXME: get tags
-               String jidem = eval.extractJID(employee);
-               String passem = jid+"pass";
-               //Subscriber s = new Subscriber(jidem, passem, xmppserver, port);
-               //FIXME needed to get all nodes with the s connection?
-               //s.mgr.discoverNodes()
-               //node = s.getNode(nodeName);
-               for (LeafNode nodeem: allNodes) {
-                   nodeem.subscribe(jid + "@" + xmppserver);
-               }
-           }
+//            ArrayList<LeafNode> nodes = new ArrayList<LeafNode>();
+//            ArrayList<String> nodenames = new ArrayList<String>();
+            HashMap<String, String> postsHash = eval.createNodesHash(postsModel, posts); 
+            // publish posts
+            eval.publishPosts(postsHash);
                 
-                
-            }
+            // subscribe
+            ArrayList<String> nodeNames = new ArrayList<String>(postsHash.keySet());
+            eval.subscribeToNodes(jids, nodeNames);
+            
         } catch(Exception e) {
             e.printStackTrace();
             logger.debug(e);
