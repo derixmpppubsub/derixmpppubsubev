@@ -47,6 +47,7 @@ import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Registration;
 import org.jivesoftware.smackx.pubsub.Item;
 import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.Subscription;
 
 import org.deri.xmpppubsub.*;
 
@@ -254,6 +255,7 @@ public class PubSubEval {
 	        logger.debug("node " + nodeName + " got or created");
 		    SPARQLQuery query = new SPARQLQuery(postsHash.get(nodeName));
 	        p.publish(node, query.toXML());
+	        logger.debug("sent post " + query.toXML());
 	        p.disconnect();
 	    }
 }
@@ -281,29 +283,33 @@ public class PubSubEval {
         
     }    
     
-    public void subscribeToNodes(HashMap<String, String> jids, ArrayList<String> nodeNames) throws XMPPException{
+    public void subscribeToNodes(HashMap<String, String> jids,
+            ArrayList<String> nodeNames) throws XMPPException{
         for (String jidaccount : jids.keySet()) {
-            Subscriber s = new Subscriber(jidaccount, jids.get(jidaccount), xmppServer, xmppPort);
+            Subscriber s = new Subscriber(jidaccount, jids.get(jidaccount), 
+                    xmppServer, xmppPort);
             //FIXME needed to get all nodes with the s connection?
             //s.mgr.discoverNodes()
             for (String nodeName: nodeNames) {
-         	   if (!nodeName.equals(jidaccount) ) {
-	            	   LeafNode node = s.getNode(nodeName);
-	            	   logger.debug("subscribing jid " + jidaccount + "to node " + nodeName);
-	            	   node.subscribe(jidaccount + "@" + xmppServer);
-		       		   List its = node.getItems(1);
+                LeafNode node = s.getNode(nodeName);
+                
+                //just to clean
+                //s.deleteSubscriptions(node, jidaccount, xmppServer);
+                
+         	    if (!nodeName.equals(jidaccount) ) {
+         	        s.subscribeIfNotSubscribed(node, jidaccount, xmppServer);
+         	        
+         	        List<? extends Item> items = node.getItems(1);
 		    			
-		    		   Iterator itr = its.iterator();
-		    			
-		    		   while (itr.hasNext()){
-		    			   Item it = (Item) itr.next();
-		    			   System.out.println(it.toString());
-		    		   }
-         	   }
+         	        for(Item item : items){
+		    			   System.out.println(item.toString());
+		    		}
+         	     }
             }
             //s.disconnect
         }
     }
+    
     public static void main(String[] args){
         try {
             // Set up a simple configuration that logs on the console.
