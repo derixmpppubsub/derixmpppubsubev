@@ -59,13 +59,18 @@ import org.deri.xmpppubsub.*;
 public class PubSubEval {
 	private String xmppServer;
 	private int xmppPort;
+	public ArrayList<Publisher> publishers;
+	public ArrayList<Subscriber> subscribers;
+	
     static Namespace nm = new Namespace();
     // TODO use Junit
     static Logger logger = Logger.getLogger(PubSubEval.class);
-
+    
     public PubSubEval(String xmppServer, int xmppPort) {
     	this.xmppServer = xmppServer;
     	this.xmppPort = xmppPort;
+    	this.publishers = new ArrayList<Publisher>();
+    	this.subscribers = new ArrayList<Subscriber>();
     }
     
     /**
@@ -249,14 +254,14 @@ public class PubSubEval {
     public void publishPosts(HashMap<String, String> postsHash) throws XMPPException, IOException, ExtractionException, QueryTypeException{
         for (String nodeName : postsHash.keySet()) {
 	        String pass = nodeName+"pass";
-	        Publisher p = new Publisher(nodeName, pass, this.xmppServer);
+	        Publisher p = new Publisher(nodeName, pass, xmppServer);
 	        LeafNode node = p.getOrCreateNode(nodeName);
 	        //FIXME get tags from post and add tags to node
 	        logger.debug("node " + nodeName + " got or created");
 		    SPARQLQuery query = new SPARQLQuery(postsHash.get(nodeName));
-	        p.publish(node, query.toXML());
+	        p.publishQuery(query.toXML());
 	        logger.debug("sent post " + query.toXML());
-	        p.disconnect();
+//	        p.disconnect();
 	    }
 }
     public String extractPostData(Model model, String post) {
@@ -286,8 +291,7 @@ public class PubSubEval {
     public void subscribeToNodes(HashMap<String, String> jids,
             ArrayList<String> nodeNames) throws XMPPException{
         for (String jidaccount : jids.keySet()) {
-            Subscriber s = new Subscriber(jidaccount, jids.get(jidaccount), 
-                    xmppServer, xmppPort);
+            Subscriber s = new Subscriber(jidaccount, jids.get(jidaccount), xmppServer);
             //FIXME needed to get all nodes with the s connection?
             //s.mgr.discoverNodes()
             for (String nodeName: nodeNames) {
@@ -297,13 +301,13 @@ public class PubSubEval {
                 //s.deleteSubscriptions(node, jidaccount, xmppServer);
                 
          	    if (!nodeName.equals(jidaccount) ) {
-         	        s.subscribeIfNotSubscribed(node, jidaccount, xmppServer);
+         	        s.subscribeIfNotSubscribedTo(node);
          	        
-         	        List<? extends Item> items = node.getItems(1);
-		    			
-         	        for(Item item : items){
-		    			   System.out.println(item.toString());
-		    		}
+//         	        List<? extends Item> items = node.getItems(1);
+//		    			
+//         	        for(Item item : items){
+//		    			   System.out.println(item.toString());
+//		    		}
          	     }
             }
             //s.disconnect
@@ -345,7 +349,6 @@ public class PubSubEval {
             // create Jabber accounts for the employees 
             //eval.createAccounts(jids);
             
-            
             // extract posts
             Model postsModel = eval.extractNTriples(postsFileName);
             ArrayList<String> posts = eval.extractPosts(postsModel);
@@ -359,6 +362,7 @@ public class PubSubEval {
             // subscribe
             ArrayList<String> nodeNames = new ArrayList<String>(postsHash.keySet());
             eval.subscribeToNodes(jids, nodeNames);
+            
             
         } catch(Exception e) {
             e.printStackTrace();
