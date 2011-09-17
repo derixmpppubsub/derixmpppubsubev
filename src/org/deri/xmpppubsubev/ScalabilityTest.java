@@ -29,13 +29,14 @@ public class ScalabilityTest {
     
     public ScalabilityTest(String xmppServer) {
         numberOfPublishers = 1;
-        numberOfSubscribers = 2;
+        numberOfSubscribers = 100;
         publishers = new ArrayList<Publisher>();
         subscribers = new ArrayList<Subscriber>();
         this.xmppServer = xmppServer;
     }
     
-    public void run() throws XMPPException, IOException, ExtractionException, QueryTypeException {
+    public void run() throws XMPPException, IOException, ExtractionException, 
+            QueryTypeException, InterruptedException {
         System.out.print("number of publishers" + numberOfPublishers);
         for (int i=1; i<=numberOfPublishers; i++) {
             System.out.print("" + i);
@@ -50,71 +51,91 @@ public class ScalabilityTest {
                 subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
                 node.addItemEventListener(new ItemEventCoordinator());
+                logger.debug("added listener");
                 s.subscribeIfNotSubscribedTo(node);
+                logger.debug("subscribed if not subcribed");
             }
-            SPARQLQuery query = new SPARQLQuery(String.format(postTemplate, i, i , i));
+            SPARQLQuery query = new SPARQLQuery(String.format(postTemplate, i, i , "pub"+i));
             p.publishQuery(query.toXML());
             logger.debug("Published query.");
         }
     }
     
-    public static void main(String[] args) throws XMPPException, IOException, ExtractionException, QueryTypeException{
-
-        // Set up a simple configuration that logs on the console.
-        BasicConfigurator.configure();
+    public static void main(String[] args) {
+        try {
+            // Set up a simple configuration that logs on the console.
+            BasicConfigurator.configure();
+            
+            logger.setLevel(Level.DEBUG);
+            logger.debug("Entering application.");
+            // turn on the enhanced debugger
+//            XMPPConnection.DEBUG_ENABLED = true;
+            String xmppServer = "vmuss12.deri.ie";
+            
+            ScalabilityTest st = new ScalabilityTest(xmppServer);
+            st.run();
+            
+            // 1. 
+            // init publishers and subscribers
+            // for jid in jids
+    
+                // init publisher
+                // Publisher p = new Publisher(jid, jid+"pass");
+                // publisherNodes.add(p.getOrCreateNode("node" + jid));
+            
+                // init subscriber
+                // Subscriber s = new Subscriber(jid, jid+"pass");
+                // for publisherNode in publisherNodes
+                    // s.subscribeIfNotSubscribedTo(publisherNode)
+            
+            // send posts
+            // nodesHash = createNodesHash();
+            // for nodename in nodesHash
+            
+            
+                // SPARQLQuery query = new SPARQLQuery(nodename.get("data"));
+                // p.get(node).publishQuery(query.toXMLDecodingEntitiesCDATA());
+    
+            
+            // 2. 
+            // init publishers and subscribers
+            // for jid in jids
+            
+            
+                // init subscriber
+                // Subscriber s = new Subscriber(jid, jid+"pass");
+                // for publisherNode in publisherNodes
+                    // s.subscribeIfNotSubscribedTo(publisherNode)
+            
+            // send posts
+            // nodesHash = createNodesHash();
+            // for nodename in nodesHash
+            
+                // init publisher
+                // Publisher p = new Publisher(node, node+"pass");
+                // publisherNodes.add(p.getOrCreateNode("node" + jid));
+            
+                // SPARQLQuery query = new SPARQLQuery(nodename.get("data"));
+                // p.publishQuery(query.toXMLDecodingEntitiesCDATA());
         
-        logger.setLevel(Level.DEBUG);
-        logger.debug("Entering application.");
-        // turn on the enhanced debugger
-        XMPPConnection.DEBUG_ENABLED = true;
-        String xmppServer = "vmuss12.deri.ie";
-        
-        ScalabilityTest st = new ScalabilityTest(xmppServer);
-        st.run();
-        
-        // 1. 
-        // init publishers and subscribers
-        // for jid in jids
-
-            // init publisher
-            // Publisher p = new Publisher(jid, jid+"pass");
-            // publisherNodes.add(p.getOrCreateNode("node" + jid));
-        
-            // init subscriber
-            // Subscriber s = new Subscriber(jid, jid+"pass");
-            // for publisherNode in publisherNodes
-                // s.subscribeIfNotSubscribedTo(publisherNode)
-        
-        // send posts
-        // nodesHash = createNodesHash();
-        // for nodename in nodesHash
-        
-        
-            // SPARQLQuery query = new SPARQLQuery(nodename.get("data"));
-            // p.get(node).publishQuery(query.toXMLDecodingEntitiesCDATA());
-
-        
-        // 2. 
-        // init publishers and subscribers
-        // for jid in jids
-        
-        
-            // init subscriber
-            // Subscriber s = new Subscriber(jid, jid+"pass");
-            // for publisherNode in publisherNodes
-                // s.subscribeIfNotSubscribedTo(publisherNode)
-        
-        // send posts
-        // nodesHash = createNodesHash();
-        // for nodename in nodesHash
-        
-            // init publisher
-            // Publisher p = new Publisher(node, node+"pass");
-            // publisherNodes.add(p.getOrCreateNode("node" + jid));
-        
-            // SPARQLQuery query = new SPARQLQuery(nodename.get("data"));
-            // p.publishQuery(query.toXMLDecodingEntitiesCDATA());
-
+        } catch(XMPPException e) {
+            e.printStackTrace();
+            logger.debug(e);
+            
+        } catch(IOException e) {
+            e.printStackTrace();
+            logger.debug(e);
+            
+        } catch (ExtractionException e) {
+            e.printStackTrace();
+            logger.debug(e);
+        } catch (QueryTypeException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         
     }
 }
