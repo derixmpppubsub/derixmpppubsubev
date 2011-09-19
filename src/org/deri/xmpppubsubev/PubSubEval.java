@@ -251,7 +251,9 @@ public class PubSubEval {
     	
     }
     
-    public void publishPosts(HashMap<String, String> postsHash) throws XMPPException, IOException, ExtractionException, QueryTypeException{
+    public void publishPosts(HashMap<String, String> postsHash) throws 
+            XMPPException, IOException, ExtractionException, 
+            QueryTypeException, InterruptedException{
         for (String nodeName : postsHash.keySet()) {
 	        String pass = nodeName+"pass";
 	        Publisher p = new Publisher(nodeName, pass, xmppServer);
@@ -289,7 +291,8 @@ public class PubSubEval {
     }    
     
     public void subscribeToNodes(HashMap<String, String> jids,
-            ArrayList<String> nodeNames) throws XMPPException{
+            ArrayList<String> nodeNames) throws XMPPException, 
+            InterruptedException{
         for (String jidaccount : jids.keySet()) {
             Subscriber s = new Subscriber(jidaccount, jids.get(jidaccount), xmppServer);
             //FIXME needed to get all nodes with the s connection?

@@ -47,10 +47,10 @@ public class ScalabilityTest {
             publishers.add(p);
             for (int j=1; j<=numberOfSubscribers; j++) {    
                 Subscriber s = new Subscriber("sub" + j, "sub" + j + "pass", xmppServer);
-                logger.debug("Created subscriber.");
+                logger.debug("Created subscriber."); 
                 subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
-                node.addItemEventListener(new ItemEventCoordinator());
+                node.addItemEventListener(new ItemEventCoordinator(""+j))   ;
                 logger.debug("added listener");
                 s.subscribeIfNotSubscribedTo(node);
                 logger.debug("subscribed if not subcribed");
@@ -59,6 +59,11 @@ public class ScalabilityTest {
             p.publishQuery(query.toXML());
             logger.debug("Published query.");
         }
+        Thread.sleep(1000);
+//
+//        while (true) {
+//            Thread.sleep(50);
+//        }
     }
     
     public static void main(String[] args) {
