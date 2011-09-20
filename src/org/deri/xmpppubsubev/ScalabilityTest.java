@@ -37,7 +37,8 @@ public class ScalabilityTest {
     
     public void run() throws XMPPException, IOException, ExtractionException, 
             QueryTypeException, InterruptedException {
-        System.out.print("number of publishers" + numberOfPublishers);
+        logger.info("number of publishers" + Integer.toString(numberOfPublishers));
+        logger.info("number of subscribers" + Integer.toString(numberOfSubscribers));
         for (int i=1; i<=numberOfPublishers; i++) {
             System.out.print("" + i);
             Publisher p = new Publisher("pub" + i, "pub" + i + "pass", xmppServer);
@@ -78,7 +79,7 @@ public class ScalabilityTest {
 //            XMPPConnection.DEBUG_ENABLED = true;
             String xmppServer = "vmuss12.deri.ie";
             
-            ScalabilityTest st = new ScalabilityTest(xmppServer, 100, 1);
+            ScalabilityTest st = new ScalabilityTest(xmppServer, 2, 2);
 //            ScalabilityTest st = new ScalabilityTest(xmppServer, 1, 1000);
 //            ScalabilityTest st = new ScalabilityTest(xmppServer, 100, 1);
 //            ScalabilityTest st = new ScalabilityTest(xmppServer, 1000, 1);
