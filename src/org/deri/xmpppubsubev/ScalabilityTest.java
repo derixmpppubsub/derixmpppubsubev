@@ -27,9 +27,9 @@ public class ScalabilityTest {
     static Logger loggerp = Logger.getLogger(Publisher.class);
     static Logger loggers = Logger.getLogger(Subscriber.class);
     
-    public ScalabilityTest(String xmppServer) {
-        numberOfPublishers = 1;
-        numberOfSubscribers = 100;
+    public ScalabilityTest(String xmppServer, int numberOfPub, int numberOfSub) {
+        numberOfPublishers = numberOfPub;
+        numberOfSubscribers = numberOfSub;
         publishers = new ArrayList<Publisher>();
         subscribers = new ArrayList<Subscriber>();
         this.xmppServer = xmppServer;
@@ -59,6 +59,7 @@ public class ScalabilityTest {
             p.publishQuery(query.toXML());
             logger.debug("Published query.");
         }
+        // give time to all the messages to arrive
         Thread.sleep(1000);
 //
 //        while (true) {
@@ -77,7 +78,11 @@ public class ScalabilityTest {
 //            XMPPConnection.DEBUG_ENABLED = true;
             String xmppServer = "vmuss12.deri.ie";
             
-            ScalabilityTest st = new ScalabilityTest(xmppServer);
+            ScalabilityTest st = new ScalabilityTest(xmppServer, 100, 1);
+//            ScalabilityTest st = new ScalabilityTest(xmppServer, 1, 1000);
+//            ScalabilityTest st = new ScalabilityTest(xmppServer, 100, 1);
+//            ScalabilityTest st = new ScalabilityTest(xmppServer, 1000, 1);
+//          ScalabilityTest st = new ScalabilityTest(xmppServer, 1000, 1000);
             st.run();
             
             // 1. 
