@@ -1,0 +1,2 @@
+java -Xmx2048m -Dfile.encoding=UTF-8 -classpath bin:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:lib/slf4j-log4j12-1.5.8.jar:lib/icu4j-3.4.4.jar:lib/iri-0.8.jar:lib/junit-4.5.jar:lib/log4j-1.2.13.jar:lib/lucene-core-2.3.1.jar:lib/slf4j-api-1.5.8.jar:lib/stax-api-1.0.1.jar:lib/wstx-asl-3.2.9.jar:lib/xercesImpl-2.7.1.jar:lib/any23-core-0.6.1.jar:lib/derixmpppubsub.jar org.deri.xmpppubsubev.ScalabilityTest
+

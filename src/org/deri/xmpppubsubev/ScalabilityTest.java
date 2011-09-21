@@ -1,7 +1,13 @@
 package org.deri.xmpppubsubev;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -22,50 +28,86 @@ public class ScalabilityTest {
     public static String postTemplate = "<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> ."
         + "<http://ecp-alpha/semantic/post/%s> <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> .";
     public String xmppServer;
+    public String fileName;
     
     static Logger logger = Logger.getLogger(ScalabilityTest.class);
     static Logger loggerp = Logger.getLogger(Publisher.class);
     static Logger loggers = Logger.getLogger(Subscriber.class);
     
-    public ScalabilityTest(String xmppServer, int numberOfPub, int numberOfSub) {
+    public ScalabilityTest(String xmppServer, int numberOfPub, int numberOfSub,
+            String fileName) {
         numberOfPublishers = numberOfPub;
         numberOfSubscribers = numberOfSub;
         publishers = new ArrayList<Publisher>();
         subscribers = new ArrayList<Subscriber>();
         this.xmppServer = xmppServer;
+        this.fileName = fileName;
+    }
+    
+    public void calculateAverage(String inputFileName, String numberClients, 
+            String outputFileName) throws IOException {
+//        ArrayList<String> numbers = new ArrayList<String>();
+        long totalTime = 0;
+        int numberReq = 0;
+        File file = new File(inputFileName);
+        BufferedReader bufRdr  = new BufferedReader(new FileReader(file));
+        String line = null;
+        while((line = bufRdr.readLine()) != null)        {
+//            StringTokenizer st = new StringTokenizer(line,",");
+            String[] columns = line.split(",");
+            String timeElapsed = columns[columns.length -1];
+            logger.info(timeElapsed);
+//            numbers.add(timeElapsed);
+            totalTime += Long.parseLong(timeElapsed);
+            numberReq++;
+        }
+        bufRdr.close();
+        long avgTime = totalTime/numberReq;
+        logger.info("average: " + avgTime);
+        FileWriter writer = new FileWriter(outputFileName, true);
+        writer.append(numberClients);
+        writer.append(',');
+        writer.append(Long.toString(avgTime));
+        writer.append('\n');
+        writer.flush();
+        writer.close();
+        
     }
     
     public void run() throws XMPPException, IOException, ExtractionException, 
             QueryTypeException, InterruptedException {
-        logger.info("number of publishers" + Integer.toString(numberOfPublishers));
-        logger.info("number of subscribers" + Integer.toString(numberOfSubscribers));
+        logger.info("number of publishers " + Integer.toString(numberOfPublishers));
+        logger.info("number of subscribers " + Integer.toString(numberOfSubscribers));
+	try {
         for (int i=1; i<=numberOfPublishers; i++) {
-            System.out.print("" + i);
-            Publisher p = new Publisher("pub" + i, "pub" + i + "pass", xmppServer);
-            logger.debug("Created publisher.");
+	    if(Runtime.getRuntime().freeMemory()<1024*1024)
+ 	        System.gc();
+            String pubName = "pub" + i;
+            String pubPass = pubName + "pass";
+            Publisher p = new Publisher(pubName, pubPass , xmppServer);
             String nodeName = "node" + i;
             p.getOrCreateNode(nodeName);
             publishers.add(p);
-            for (int j=1; j<=numberOfSubscribers; j++) {    
-                Subscriber s = new Subscriber("sub" + j, "sub" + j + "pass", xmppServer);
-                logger.debug("Created subscriber."); 
+            for (int j=1; j<=numberOfSubscribers; j++) {  
+                String subName = "sub" + j;
+                String subPass = subName + "pass";  
+                Subscriber s = new Subscriber(subName, subPass, xmppServer);
                 subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
-                node.addItemEventListener(new ItemEventCoordinator(""+j))   ;
-                logger.debug("added listener");
+                node.addItemEventListener(
+                        new ItemEventCoordinator(""+j, fileName));
                 s.subscribeIfNotSubscribedTo(node);
-                logger.debug("subscribed if not subcribed");
             }
             SPARQLQuery query = new SPARQLQuery(String.format(postTemplate, i, i , "pub"+i));
             p.publishQuery(query.toXML());
             logger.debug("Published query.");
         }
-        // give time to all the messages to arrive
-        Thread.sleep(1000);
-//
-//        while (true) {
-//            Thread.sleep(50);
-//        }
+	} catch(OutOfMemoryError e){
+		System.gc();
+		System.out.println("out of memory");
+	}
+//        // give time to all the messages to arrive
+//        Thread.sleep(100*numberOfPublishers*numberOfSubscribers);
     }
     
     public static void main(String[] args) {
@@ -77,57 +119,17 @@ public class ScalabilityTest {
             logger.debug("Entering application.");
             // turn on the enhanced debugger
 //            XMPPConnection.DEBUG_ENABLED = true;
-            String xmppServer = "vmuss12.deri.ie";
-            
-            ScalabilityTest st = new ScalabilityTest(xmppServer, 2, 2);
-//            ScalabilityTest st = new ScalabilityTest(xmppServer, 1, 1000);
-//            ScalabilityTest st = new ScalabilityTest(xmppServer, 100, 1);
-//            ScalabilityTest st = new ScalabilityTest(xmppServer, 1000, 1);
-//          ScalabilityTest st = new ScalabilityTest(xmppServer, 1000, 1000);
+            String xmppServer = "localhost";
+//            String xmppServer = "vmuss12.deri.ie";
+            int numberPubs = 1000;
+            int numberSubs = 10;
+            String fileName = numberPubs + "pub" + numberSubs + "sub.csv" ;
+            ScalabilityTest st = new ScalabilityTest(xmppServer, numberPubs,
+                    numberSubs, fileName);
             st.run();
-            
-            // 1. 
-            // init publishers and subscribers
-            // for jid in jids
-    
-                // init publisher
-                // Publisher p = new Publisher(jid, jid+"pass");
-                // publisherNodes.add(p.getOrCreateNode("node" + jid));
-            
-                // init subscriber
-                // Subscriber s = new Subscriber(jid, jid+"pass");
-                // for publisherNode in publisherNodes
-                    // s.subscribeIfNotSubscribedTo(publisherNode)
-            
-            // send posts
-            // nodesHash = createNodesHash();
-            // for nodename in nodesHash
-            
-            
-                // SPARQLQuery query = new SPARQLQuery(nodename.get("data"));
-                // p.get(node).publishQuery(query.toXMLDecodingEntitiesCDATA());
-    
-            
-            // 2. 
-            // init publishers and subscribers
-            // for jid in jids
-            
-            
-                // init subscriber
-                // Subscriber s = new Subscriber(jid, jid+"pass");
-                // for publisherNode in publisherNodes
-                    // s.subscribeIfNotSubscribedTo(publisherNode)
-            
-            // send posts
-            // nodesHash = createNodesHash();
-            // for nodename in nodesHash
-            
-                // init publisher
-                // Publisher p = new Publisher(node, node+"pass");
-                // publisherNodes.add(p.getOrCreateNode("node" + jid));
-            
-                // SPARQLQuery query = new SPARQLQuery(nodename.get("data"));
-                // p.publishQuery(query.toXMLDecodingEntitiesCDATA());
+          // give time to all the messages to arrive
+            Thread.sleep(100*numberPubs*numberSubs);
+            st.calculateAverage(fileName, numberSubs+"", "averages.csv");
         
         } catch(XMPPException e) {
             e.printStackTrace();

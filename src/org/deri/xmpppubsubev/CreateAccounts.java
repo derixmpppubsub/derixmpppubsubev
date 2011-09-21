@@ -7,7 +7,7 @@ import org.jivesoftware.smack.XMPPException;
 
 public class CreateAccounts {
     
-    public void main(String[] args) {
+    public static void main(String[] args) {
         XMPPConnection connection;
         String userName;
         String password;
@@ -24,11 +24,10 @@ public class CreateAccounts {
                 userName = "pub"+i;
                 password = userName+"pass";
                 try {
-                    connection.login(userName, password);
+                    connection.getAccountManager().createAccount(userName, password);
                     logger.info("User " + userName + " logged in to the server " 
                             + domain);
                 } catch(XMPPException e) {
-                        connection.getAccountManager().createAccount(userName, password);
                 }
             }
             //subscribers
@@ -36,11 +35,10 @@ public class CreateAccounts {
                 userName = "sub"+i;
                 password = userName+"pass";
                 try {
-                    connection.login(userName, password);
+                    connection.getAccountManager().createAccount(userName, password);
                     logger.info("User " + userName + " logged in to the server " 
                             + domain);
                 } catch(XMPPException e) {
-                        connection.getAccountManager().createAccount(userName, password);
                 }
             }
         } catch (XMPPException e1) {
