@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<!DOCTYPE tsung SYSTEM "/usr/share/tsung/tsung-1.0.dtd">
+<tsung loglevel="debug" dumptraffic="false" version="1.0">
+
+<clients>
+  <client host="localhost" use_controller_vm="true"></client>
+</clients>
+
+<servers>
+   <server host='localhost' port='5222' type='tcp'/>
+</servers>
+
+<!-- register 2 users in less than 1 minute  -->
+<load>
+<!--  <arrivalphase phase="1" duration="1" unit="minute">-->
+<!--    <users maxnumber="2" interarrival="0.0025" unit="second"></users>-->
+<!--  </arrivalphase>-->
+
+  <!--  duration 5 minutes, 1 user every 0.1 seconds-->
+<!--  The phases will happen one after the other and the test will finish when all users have ended their session. -->
+<!--  <arrivalphase phase="3" duration="5" unit="minute">-->
+<!--      <users interarrival="0.1" unit="second"></users>-->
+<!--  </arrivalphase>-->
+
+  <user session="owners" start_time="0.1" unit="second"></user>
+  <!--user begining at minute 2 of the test start using the jabber-plain-authentication session-->
+  <user session="subscribers" start_time="1" unit="second"></user>
+</load>
+
+<options>
+  <!--users will be myuserXXX where XXX is an integer in the interval [1:userid_max] and passwd mypasswdXXX-->
+  <option type="ts_jabber" name="global_number" value="5"></option>
+  <option type="ts_jabber" name="userid_max" value="2"></option>
+  <option type="ts_jabber" name="domain" value="localhost"></option>
+  <option type="ts_jabber" name="username" value="test"></option>
+  <option type="ts_jabber" name="passwd" value="test"></option>
+  <option type="ts_jabber" name="pubsub_service" value="pubsub.localhost"/>
+</options>
+
+<!--Sessions define the content of the scenario itself. They describe the requests to execute.-->
+<!--Each session has a given probability. This is used to decide which session a new user will execute. The sum of all session's probabilities must be 100.-->
+<!--A transaction is just a way to have customized statistics. Say if you want to know the response time of the login page of your website, you just have to put all the requests of this page-->
+<sessions>
+
+
+
+<!--The owners session has a probability of 0. It only is executed by users explicitly asking it, whit the new <user..> tag on the <load> section.Using the <user ..> tag, we create as many publishers as desired, at the start of the scenario-->
+  <session probability="0" name="owners" type="ts_jabber">
+<!--begin plain authentication-->
+
+    <request> <jabber type="connect" ack="local"></jabber> </request>
+
+   <request>
+     <match do="continue" when="match">error</match>
+     <jabber type="register" ack="local" id="new"></jabber>
+   </request>
+<!--    <thinktime value="2"></thinktime>-->
+<!--    <transaction name="auth_plain">-->
+
+      <request> <jabber type="auth_get" ack="local"></jabber> </request>
+      <request> <jabber type="auth_set_plain" ack="local"></jabber> </request>
+<!--      -->
+<!--    </transaction>-->
+<!--end plain authentication-->
+
+<!--check presence-->
+    <request> <jabber type="presence:initial" ack="no_ack"/> </request>
+
+    <thinktime value="2"></thinktime>
+    <request subst="true"> 
+      <match do="continue" when="match">error</match>
+      <jabber type='pubsub:create' ack = "local" node = ""/>
+    </request>
+    <transaction name="publish">
+    <request subst="true"> 
+      <jabber type='pubsub:publish' ack = "local" node = "" size="500"/>
+    </request>
+    </transaction>
+
+<!--    <request> <jabber type="close" ack="local"></jabber> </request>-->
+
+  </session>
+
+<!--The session of subscribers starts by waiting for a while before subscribing (to give enough time to all publishers to create their nodes).-->
+  <session probability="100" name="subscribers" type="ts_jabber">
+
+    <thinktime value="1"></thinktime>
+
+<!--begin plain authentication-->
+
+    <request> <jabber type="connect" ack="local"></jabber> </request>
+
+   <request>
+     <match do="continue" when="match">error</match>
+     <jabber type="register" ack="local" id="new"></jabber>
+   </request>
+   
+<!--    <thinktime value="2"></thinktime>-->
+<!--    <transaction name="auth_plain">-->
+
+    <request> <jabber type="auth_get" ack="local"></jabber> </request>
+    <request> <jabber type="auth_set_plain" ack="local"></jabber> </request>
+      
+<!--    </transaction>-->
+<!--end plain authentication-->
+
+
+<!--check presence-->
+    <request> <jabber type="presence:initial" ack="no_ack"/> </request>
+
+
+<!--    <thinktime value="2"></thinktime>-->
+
+<!--    <transaction name="online">-->
+<!--    <request> <jabber type="chat" ack="no_ack" size="16" destination="online"/></request>-->
+<!--    </transaction>-->
+
+    <transaction name="subscribe">
+    <request> 
+      <jabber type='pubsub:subscribe' ack = "local" node = "" destination = "online"/>
+    </request> 
+    </transaction>
+
+  </session>
+
+</sessions>
+</tsung>
+
+
+<!--PUBSUB possibilities https://support.process-one.net/browse/TSUN-115-->
+<!--Also, in the future it could be interesting to know the end-to-end delay, between the instant when the publisher put a new item, and when allAlso, in the future it could be interesting to know the end-to-end delay, between the instant when the publisher put a new item, and when all-->
+<!--destination is used to address the node inside another user hierarchy IF the node address isn't absolute.-->
+<!--by specifying node="", tsung will try to create the "root" node for this user, /home/domain/user,-->
+<!--if node="someNode", tsung will try to create /home/domain/user/someNode-->
+<!--if node is absolute (starts with "/"), tsung will try to create it (/otherRootNode)-->
+<!--  <jabber type='pubsub:create' ack = "local" node = "relativePath|absolutePath" node_type="flat"/>-->
+<!--  <jabber type='pubsub:subscribe' ack = "local" node = "relativePath|absolutePath" dest = "random|online|offline|User"/>-->
+<!--  <jabber type='pubsub:publish' ack = "noack" node = "relativePath|absolutePath" size="ItemSize"/>-->
