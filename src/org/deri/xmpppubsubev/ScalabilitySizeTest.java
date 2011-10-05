@@ -13,34 +13,34 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-//import org.deri.any23.extractor.ExtractionException;
+import org.deri.any23.extractor.ExtractionException;
 import org.deri.xmpppubsub.*;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.pubsub.LeafNode;
 
-public class SubscribersTest {
+public class ScalabilitySizeTest {
     public static int numberOfPublishers;
     public static int numberOfSubscribers;
-    //public static ArrayList<Publisher> publishers;
-    //public static ArrayList<Subscriber> subscribers;
-    //public static int MAX_PUBLISHERS = 100;
+    public static ArrayList<Publisher> publishers;
+    public static ArrayList<Subscriber> subscribers;
+    public static int MAX_PUBLISHERS = 100;
     public static String postTemplate = "<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> .";
     public String xmppServer;
     public String fileName;
     public static int numberOfTriples;
     public static boolean separatedPosts;
     
-    static Logger logger = Logger.getLogger(SubscribersTest.class);
-    //static Logger loggerp = Logger.getLogger(Publisher.class);
+    static Logger logger = Logger.getLogger(ScalabilitySizeTest.class);
+    static Logger loggerp = Logger.getLogger(Publisher.class);
     static Logger loggers = Logger.getLogger(Subscriber.class);
     
-    public SubscribersTest(String xmppServer, int numberOfPub, int numberOfSub,
+    public ScalabilitySizeTest(String xmppServer, int numberOfPub, int numberOfSub,
             String fileName, int numberOfTriples, boolean separatedPosts) {
         numberOfPublishers = numberOfPub;
         numberOfSubscribers = numberOfSub;
-        //publishers = new ArrayList<Publisher>();
-        //subscribers = new ArrayList<Subscriber>();
+        publishers = new ArrayList<Publisher>();
+        subscribers = new ArrayList<Subscriber>();
         this.xmppServer = xmppServer;
         this.fileName = fileName;
         this.numberOfTriples = numberOfTriples;
@@ -77,23 +77,47 @@ public class SubscribersTest {
         
     }
     
-    public void run() throws XMPPException, IOException, QueryTypeException, 
-            InterruptedException {
+    public void run() throws XMPPException, IOException, ExtractionException, 
+            QueryTypeException, InterruptedException {
         logger.info("number of publishers " + Integer.toString(numberOfPublishers));
         logger.info("number of subscribers " + Integer.toString(numberOfSubscribers));
     try {
         for (int i=1; i<=numberOfPublishers; i++) {
-            if(Runtime.getRuntime().freeMemory()<1024*1024) System.gc();
+        if(Runtime.getRuntime().freeMemory()<1024*1024)
+             System.gc();
+            String pubName = "pub" + i;
+            String pubPass = pubName + "pass";
+            Publisher p = new Publisher(pubName, pubPass , xmppServer);
             String nodeName = "node" + i;
+            p.getOrCreateNode(nodeName);
+            publishers.add(p);
             for (int j=1; j<=numberOfSubscribers; j++) {  
                 String subName = "sub" + j;
                 String subPass = subName + "pass";  
                 Subscriber s = new Subscriber(subName, subPass, xmppServer);
-                //subscribers.add(s);
+                subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
                 node.addItemEventListener(
                         new ItemEventCoordinator(""+j, fileName));
                 s.subscribeIfNotSubscribedTo(node);
+            }
+            //diferent queries
+            //get from repo
+            if (separatedPosts) {
+                for (int k=1; k<=numberOfTriples; k++) {  
+                    String triples = String.format(postTemplate, k);
+                    SPARQLQuery query = new SPARQLQuery(triples);
+                    p.publishQuery(query.toXML());
+                    logger.debug("Published query.");
+                }
+            } else {
+                String triples = "";
+                for (int k=1; k<=numberOfTriples; k++) { 
+                    triples += "\n"+String.format(postTemplate, k);
+                }
+                SPARQLQuery query = new SPARQLQuery(triples);
+                p.publishQuery(query.toXML());
+                logger.debug("Published query.");
             }
         }
     } catch(OutOfMemoryError e){
@@ -118,7 +142,7 @@ public class SubscribersTest {
             int numberPubs = 1;
             int numberSubs = 1;
             String fileName = numberPubs + "pub" + numberSubs + "sub.csv" ;
-            SubscribersTest st = new SubscribersTest(xmppServer, numberPubs,
+            ScalabilitySizeTest st = new ScalabilitySizeTest(xmppServer, numberPubs,
                     numberSubs, fileName, 1, true);
             st.run();
           // give time to all the messages to arrive
@@ -132,6 +156,10 @@ public class SubscribersTest {
         } catch(IOException e) {
             e.printStackTrace();
             logger.debug(e);
+            
+        } catch (ExtractionException e) {
+            e.printStackTrace();
+            logger.debug(e);
         } catch (QueryTypeException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
@@ -139,11 +167,6 @@ public class SubscribersTest {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-            
-//        } catch (ExtractionException e) {
-//            e.printStackTrace();
-//            logger.debug(e);
-//        }
         
     }
 }

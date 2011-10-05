@@ -11,7 +11,7 @@ public class CreateAccounts {
         XMPPConnection connection;
         String userName;
         String password;
-        String domain="localhost";
+        String domain="192.168.1.4";
         int port=5222;
 
         Logger logger = Logger.getLogger(CreateAccounts.class);
