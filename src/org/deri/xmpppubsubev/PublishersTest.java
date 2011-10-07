@@ -33,6 +33,7 @@ public class PublishersTest {
     public static int numberOfTriples;
     public static boolean separatedPosts;
     public String endpoint;
+    public FileWriter writer;
     
     static Logger logger = Logger.getLogger(PublishersTest.class);
     static Logger loggerp = Logger.getLogger(Publisher.class);
@@ -40,7 +41,7 @@ public class PublishersTest {
     
     public PublishersTest(String xmppServer, int numberOfPub, //int numberOfSub,
             String fileName, int numberOfTriples, boolean separatedPosts, 
-            String endpoint) {
+            String endpoint) throws IOException {
         numberOfPublishers = numberOfPub;
         //numberOfSubscribers = numberOfSub;
         //publishers = new ArrayList<Publisher>();
@@ -50,19 +51,22 @@ public class PublishersTest {
         this.numberOfTriples = numberOfTriples;
         this.separatedPosts = separatedPosts;
         this.endpoint = endpoint;
+        writer = new FileWriter(fileName, true);
     }
     
     public static void insertTestTriples(int numPubs, int numTriples, String endpoint) 
             throws UnsupportedEncodingException, IOException {
-        Writer outputWriter = null;
-        File outputFile = new File("pub" + numPubs + "post" + numTriples 
-                + "insert-times.txt");
-        outputWriter = new BufferedWriter(new FileWriter(outputFile));
+//        Writer outputWriter = null;
+//        File outputFile = new File("pub" + numPubs + "post" + numTriples 
+//                + "insert-times.txt");
+//        outputWriter = new BufferedWriter(new FileWriter(outputFile));
         String queryString = "";
         String triples = "";
         for (int i=1; i<=numPubs; i++) {
             for (int k=1; k<=numTriples; k++) {
-                triples += String.format(postTemplate, "pub" + i + "post" +k );
+                triples += String.format(postTemplate 
+                        + "<http://ecp-alpha/semantic/post/%s> <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> . "
+                        , "pub" + i + "post" +k, "pub" + i + "post" +k, "pub" + i);
             }
         }
         logger.info(triples);
@@ -70,8 +74,10 @@ public class PublishersTest {
         SPARQLWrapper sw = new SPARQLWrapper();
         String result = sw.executeQuery(queryString, endpoint, true);
         System.out.println(result);
-        outputWriter.write("pub" + numPubs + "post" + numTriples + ", " 
-                    + sw.usedtime_cpu + ", " +  sw.usedtime_sys + "\n");
+//        outputWriter.write("pub" + numPubs + "post" + numTriples + ", " 
+////                + sw.usedtime_cpu + ", " +  sw.usedtime_sys 
+//                + "\n");
+        //sw.writer.close();
     }
     
     public void run() throws XMPPException, IOException, QueryTypeException, 
@@ -80,10 +86,9 @@ public class PublishersTest {
         //logger.info("number of subscribers " + Integer.toString(numberOfSubscribers));
         logger.info("number of triples " + Integer.toString(numberOfTriples));
         logger.info("separated files " + Boolean.toString(separatedPosts));
-        Writer outputWriter = null;
-        File outputFile = new File("pub" + numberOfPublishers + "post" + numberOfTriples
-                + "select-times.txt");
-        outputWriter = new BufferedWriter(new FileWriter(outputFile));
+//        Writer outputWriter = null;
+//        File outputFile = new File(fileName);
+//        outputWriter = new BufferedWriter(new FileWriter(outputFile));
         try {
             for (int i=1; i<=numberOfPublishers; i++) {
                 if(Runtime.getRuntime().freeMemory()<1024*1024) System.gc();
@@ -104,44 +109,71 @@ public class PublishersTest {
                         //String triples = String.format(postTemplate, k);
                         String postName = pubName  + "post" + k;
                         String queryString = "CONSTRUCT {"
-                          + String.format("<http://ecp-alpha/semantic/post/%s>", 
-                                          postName) + " ?p ?o"
+                          + String.format("<http://ecp-alpha/semantic/post/%s> ", postName)
+                          + "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
                           + "}  WHERE {"
-                          + String.format("<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> .", 
-                                          postName)
+                          + String.format("<http://ecp-alpha/semantic/post/%s> ", postName)
+                          + "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
+                          + String.format("<http://ecp-alpha/semantic/post/%s> ", postName)
+                          + String.format("?post <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> .", pubName)
                           +"}";
                         logger.info(queryString);
                         triples = sw.executeQuery(queryString, endpoint, false);
                         logger.info(triples);
-                        outputWriter.write(postName + ", " 
-                                    + sw.usedtime_cpu + ", " +  sw.usedtime_sys + "\n");
+//                        logger.info("writing to file " + postName + ", " 
+////                                + sw.usedtime_cpu + ", " +  sw.usedtime_sys
+//                                + sw.time + "\n");
+////                        outputWriter.write(postName + ", " 
+////                                    + sw.usedtime_cpu + ", " +  sw.usedtime_sys + "\n");       
+//                        writer.append(postName);
+//                        writer.append(',');
+////                        writer.append(Double.toString(sw.usedtime_cpu));
+////                        writer.append(',');
+////                        writer.append(Double.toString(sw.usedtime_sys));
+////                        writer.append(',');
+//                        writer.append(sw.time.toString());
+//                        writer.append('\n');
+//                        writer.flush();
                         
+                        String msgId = "pub" + i + "of" + numberOfPublishers 
+                                + ",msg" + k + "of" + numberOfTriples 
+                                + ",triples" + 1 + ",ctime" + sw.time.toString(); 
                         SPARQLQuery query = new SPARQLQuery(triples);
                         logger.info(query.toXML());
-                        p.publishQuery(query.toXML());
+                        p.publishQuery(query.toXML(), msgId);
                         logger.debug("Published query.");
                     }
                 } else {
-//                    for (int k=1; k<=numberOfTriples; k++) { 
-//                        triples += "\n"+String.format(postTemplate, k);
-//                    }
-                    
                     String queryString = "CONSTRUCT {"
-                      + String.format("<http://ecp-alpha/semantic/post/%s>", 
-                                      pubName) + " ?p ?o"
+                      + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
                       + "}  WHERE {"
-                      + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> ."
-                      + String.format("FILTER regex(?post, '^<http://ecp-alpha/semantic/post/%s') ", pubName)
-                      +"}";
+                      + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "       
+                      + String.format("?post <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> . ", pubName)
+                      + String.format("FILTER (REGEX(str(?post), '^http://ecp-alpha/semantic/post/%spost')) . ", pubName)
+                      +"}"
+                      + String.format(" LIMIT %s", numberOfTriples);
                     logger.info(queryString);
                     triples = sw.executeQuery(queryString, endpoint, false);
                     logger.info(triples);
-                    outputWriter.write(pubName + ", " 
-                                + sw.usedtime_cpu + ", " +  sw.usedtime_sys + "\n");
-                    
+//                    logger.info("writing to file " + pubName + ", " 
+////                                + sw.usedtime_cpu + ", " +  sw.usedtime_sys + "\n");
+//                                + sw.time + "\n");
+////                    outputWriter.write(pubName + ", " 
+////                                + sw.usedtime_cpu + ", " +  sw.usedtime_sys + "\n");
+//                    writer.append(pubName);
+//                    writer.append(',');
+////                    writer.append(Double.toString(sw.usedtime_cpu));
+////                    writer.append(',');
+////                    writer.append(Double.toString(sw.usedtime_sys));
+//                    writer.append(sw.time.toString());
+//                    writer.append('\n');         
+//                    writer.flush();
+                    String msgId = "pub" + i + "of" + numberOfPublishers 
+                            + ",msg" + 1 + "of" + 1 
+                            + ",triples" + numberOfTriples + ",ctime" + sw.time.toString(); 
                     SPARQLQuery query = new SPARQLQuery(triples);
-                    p.publishQuery(query.toXML());
-                    logger.debug("Published query.");
+                    logger.debug(query.toXML());
+                    p.publishQuery(query.toXML(), msgId);
                 }
             }
         } catch(OutOfMemoryError e){
@@ -158,40 +190,42 @@ public class PublishersTest {
             logger.setLevel(Level.DEBUG);
             logger.debug("Entering application.");
             // turn on the enhanced debugger
-            //XMPPConnection.DEBUG_ENABLED = true;
-            /*
-            String xmppServer = "192.168.1.4";
-//            String xmppServer = "vmuss12.deri.ie";
-            int numberPubs = 1;
-            int numberSubs = 1;
-            String fileName = numberPubs + "pub" + numberSubs + "sub.csv" ;
+//            XMPPConnection.DEBUG_ENABLED = true;
+            String xmppServer = "192.168.1.7";
+            String endpoint = "http://localhost:8000/sparql/";
+            int numberPubs  = Integer.parseInt(args[0]);
+            int numberTriples = Integer.parseInt(args[1]);
+            boolean separatedPosts = Boolean.parseBoolean(args[2]);
+            int numberSubs = Integer.parseInt(args[3]);
+            String fileName = "pub" + numberPubs + "post" + numberTriples 
+                    + "separatedPosts" + String.valueOf(separatedPosts)
+                    + "sub" + numberSubs  + ".csv";
             PublishersTest st = new PublishersTest(xmppServer, numberPubs,
-                    numberSubs, fileName, 100, false);
+                    fileName, numberTriples, separatedPosts, endpoint);
             st.run();
             // give time to all the messages to send
             Thread.sleep(100*numberPubs*numberSubs);
-            */
-            
-            insertTestTriples(1000, 1000, "http://localhost:8000/update/");
+//            st.writer.close();           
+            //insertTestTriples(1, 1000, "http://localhost:8000/update/");
         
         } catch(IOException e) {
             e.printStackTrace();
-            logger.debug(e);   
-        }
+            logger.debug(e);  
 //        } catch (ExtractionException e) {
 //            e.printStackTrace();
 //            logger.debug(e);
             
-//        } catch(XMPPException e) {
-//            e.printStackTrace();
-//            logger.debug(e);        
-//        } catch (QueryTypeException e) {
-//            e.printStackTrace();
-//            logger.debug(e.getMessage());
-//        } catch (InterruptedException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
+        } 
+        catch(XMPPException e) {
+            e.printStackTrace();
+            logger.debug(e);        
+        } catch (QueryTypeException e) {
+            e.printStackTrace();
+            logger.debug(e.getMessage());
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         
     }
 }

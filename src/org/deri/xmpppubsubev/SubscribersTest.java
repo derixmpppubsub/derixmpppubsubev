@@ -1,5 +1,5 @@
 package org.deri.xmpppubsubev;
-
+import java.util.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -92,7 +92,7 @@ public class SubscribersTest {
                 //subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
                 node.addItemEventListener(
-                        new ItemEventCoordinator(""+j, fileName));
+                        new ItemEventCoordinator(fileName));
                 s.subscribeIfNotSubscribedTo(node);
             }
         }
@@ -112,18 +112,30 @@ public class SubscribersTest {
             logger.setLevel(Level.DEBUG);
             logger.debug("Entering application.");
             // turn on the enhanced debugger
-            XMPPConnection.DEBUG_ENABLED = true;
-            String xmppServer = "192.168.1.4";
+            //XMPPConnection.DEBUG_ENABLED = true;
+            String xmppServer = "192.168.1.7";
 //            String xmppServer = "vmuss12.deri.ie";
-            int numberPubs = 1;
-            int numberSubs = 1;
-            String fileName = numberPubs + "pub" + numberSubs + "sub.csv" ;
+//            int numberPubs = 1;
+//            int numberSubs = 1;
+            // parse input args
+            int numberPubs  = Integer.parseInt(args[0]);
+            int numberTriples = Integer.parseInt(args[1]);
+            boolean separatedPosts = Boolean.parseBoolean(args[2]);
+            int numberSubs = Integer.parseInt(args[3]);
+//            String fileName = "subscriberpub" + numberPubs + "post" +numberTriples
+//                    + "separatedPosts" + String.valueOf(separatedPosts)
+//                    + "sub" + numberSubs + ".csv";
+            String fileName = "allTests.csv";
             SubscribersTest st = new SubscribersTest(xmppServer, numberPubs,
-                    numberSubs, fileName, 1, true);
+                    numberSubs, fileName, numberTriples, separatedPosts);
             st.run();
+            //st.sw.writer.close();
           // give time to all the messages to arrive
-            Thread.sleep(100*numberPubs*numberSubs);
-            st.calculateAverage(fileName, numberSubs+"", "averages.csv");
+            //Thread.sleep(100*numberPubs*numberSubs);
+            while (true) {
+                Thread.sleep(100);
+            }
+            //st.calculateAverage(fileName, numberSubs+"", "averages.csv");
         
         } catch(XMPPException e) {
             e.printStackTrace();
