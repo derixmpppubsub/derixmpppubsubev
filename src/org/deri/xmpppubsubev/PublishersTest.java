@@ -115,7 +115,7 @@ public class PublishersTest {
                           + String.format("<http://ecp-alpha/semantic/post/%s> ", postName)
                           + "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
                           + String.format("<http://ecp-alpha/semantic/post/%s> ", postName)
-                          + String.format("?post <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> .", pubName)
+                          + String.format("<http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> .", pubName)
                           +"}";
                         logger.info(queryString);
                         triples = sw.executeQuery(queryString, endpoint, false);
