@@ -13,7 +13,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import org.deri.any23.extractor.ExtractionException;
+//import org.deri.any23.extractor.ExtractionException;
 import org.deri.xmpppubsub.*;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -77,7 +77,7 @@ public class ScalabilitySizeTest {
         
     }
     
-    public void run() throws XMPPException, IOException, ExtractionException, 
+    public void run() throws XMPPException, IOException, QueryTypeException, InterruptedException,// ExtractionException, 
             QueryTypeException, InterruptedException {
         logger.info("number of publishers " + Integer.toString(numberOfPublishers));
         logger.info("number of subscribers " + Integer.toString(numberOfSubscribers));
@@ -98,15 +98,16 @@ public class ScalabilitySizeTest {
                 subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
                 node.addItemEventListener(
-                        new ItemEventCoordinator(""+j, fileName));
-                s.subscribeIfNotSubscribedTo(node);
+                        new ItemEventCoordinator(subName+numberOfSubscribers, ""+j, fileName));
+                s.subscribeIfNotSubscribedTo(nodeName);
             }
             //diferent queries
             //get from repo
+            SPARQLQuery query = new SPARQLQuery();
             if (separatedPosts) {
                 for (int k=1; k<=numberOfTriples; k++) {  
                     String triples = String.format(postTemplate, k);
-                    SPARQLQuery query = new SPARQLQuery(triples);
+                    query.wrapTriples(triples);
                     p.publishQuery(query.toXML());
                     logger.debug("Published query.");
                 }
@@ -115,7 +116,7 @@ public class ScalabilitySizeTest {
                 for (int k=1; k<=numberOfTriples; k++) { 
                     triples += "\n"+String.format(postTemplate, k);
                 }
-                SPARQLQuery query = new SPARQLQuery(triples);
+                query.wrapTriples(triples);
                 p.publishQuery(query.toXML());
                 logger.debug("Published query.");
             }
@@ -149,6 +150,10 @@ public class ScalabilitySizeTest {
             Thread.sleep(100*numberPubs*numberSubs);
             st.calculateAverage(fileName, numberSubs+"", "averages.csv");
         
+        } catch (QueryTypeException ex) {
+            java.util.logging.Logger.getLogger(ScalabilitySizeTest.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(ScalabilitySizeTest.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch(XMPPException e) {
             e.printStackTrace();
             logger.debug(e);
@@ -156,17 +161,13 @@ public class ScalabilitySizeTest {
         } catch(IOException e) {
             e.printStackTrace();
             logger.debug(e);
-            
-        } catch (ExtractionException e) {
-            e.printStackTrace();
-            logger.debug(e);
-        } catch (QueryTypeException e) {
-            e.printStackTrace();
-            logger.debug(e.getMessage());
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
+//        } catch (ExtractionException e) {
+//            e.printStackTrace();
+//            logger.debug(e);
+//        } catch (QueryTypeException e) {
+//            e.printStackTrace();
+//            logger.debug(e.getMessage());
         
     }
 }

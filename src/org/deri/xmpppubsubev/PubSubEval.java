@@ -1,16 +1,16 @@
 package org.deri.xmpppubsubev;
 
-import java.io.BufferedReader;
+//import java.io.BufferedReader;
+//import java.io.FileReader;
+//import java.util.Iterator;
+//import java.util.List;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 
 import com.hp.hpl.jena.query.Query;
@@ -19,35 +19,35 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
+//import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.util.FileManager;
 import com.hp.hpl.jena.vocabulary.DC;
 import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
-import com.hp.hpl.jena.vocabulary.XSD;
+//import com.hp.hpl.jena.vocabulary.RDFS;
+//import com.hp.hpl.jena.vocabulary.XSD;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.deri.any23.extractor.ExtractionException;
-import org.deri.xmpppubsub.*;
-import org.jivesoftware.smack.AccountManager;
+//import org.deri.any23.extractor.ExtractionException;
+//import org.deri.xmpppubsub.*;
+//import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.PacketCollector;
-import org.jivesoftware.smack.SmackConfiguration;
+//import org.jivesoftware.smack.PacketCollector;
+//import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.AndFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
-import org.jivesoftware.smack.filter.PacketIDFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
-import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smack.packet.Registration;
-import org.jivesoftware.smackx.pubsub.Item;
+//import org.jivesoftware.smack.filter.AndFilter;
+//import org.jivesoftware.smack.filter.PacketFilter;
+//import org.jivesoftware.smack.filter.PacketIDFilter;
+//import org.jivesoftware.smack.filter.PacketTypeFilter;
+//import org.jivesoftware.smack.packet.IQ;
+//import org.jivesoftware.smack.packet.Registration;
+//import org.jivesoftware.smackx.pubsub.Item;
 import org.jivesoftware.smackx.pubsub.LeafNode;
-import org.jivesoftware.smackx.pubsub.Subscription;
+//import org.jivesoftware.smackx.pubsub.Subscription;
 
 import org.deri.xmpppubsub.*;
 
@@ -252,7 +252,7 @@ public class PubSubEval {
     }
     
     public void publishPosts(HashMap<String, String> postsHash) throws 
-            XMPPException, IOException, ExtractionException, 
+            XMPPException, IOException, //ExtractionException, 
             QueryTypeException, InterruptedException{
         for (String nodeName : postsHash.keySet()) {
 	        String pass = nodeName+"pass";
@@ -260,7 +260,8 @@ public class PubSubEval {
 	        LeafNode node = p.getOrCreateNode(nodeName);
 	        //FIXME get tags from post and add tags to node
 	        logger.debug("node " + nodeName + " got or created");
-		    SPARQLQuery query = new SPARQLQuery(postsHash.get(nodeName));
+		    SPARQLQuery query = new SPARQLQuery();
+		    query.wrapTriples(postsHash.get(nodeName));
 	        p.publishQuery(query.toXML());
 	        logger.debug("sent post " + query.toXML());
 //	        p.disconnect();
@@ -304,7 +305,7 @@ public class PubSubEval {
                 //s.deleteSubscriptions(node, jidaccount, xmppServer);
                 
          	    if (!nodeName.equals(jidaccount) ) {
-         	        s.subscribeIfNotSubscribedTo(node);
+         	        s.subscribeIfNotSubscribedTo(nodeName);
          	        
 //         	        List<? extends Item> items = node.getItems(1);
 //		    			

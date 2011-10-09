@@ -13,7 +13,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import org.deri.any23.extractor.ExtractionException;
+//import org.deri.any23.extractor.ExtractionException;
 import org.deri.xmpppubsub.*;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -74,7 +74,7 @@ public class ScalabilityTest {
         
     }
     
-    public void run() throws XMPPException, IOException, ExtractionException, 
+    public void run() throws XMPPException, IOException, //ExtractionException, 
             QueryTypeException, InterruptedException {
         logger.info("number of publishers " + Integer.toString(numberOfPublishers));
         logger.info("number of subscribers " + Integer.toString(numberOfSubscribers));
@@ -95,10 +95,11 @@ public class ScalabilityTest {
                 subscribers.add(s);
                 LeafNode node = s.getNode(nodeName);
                 node.addItemEventListener(
-                        new ItemEventCoordinator(""+j, fileName));
-                s.subscribeIfNotSubscribedTo(node);
+                        new ItemEventCoordinator(subName+numberOfSubscribers, ""+j, fileName));
+                s.subscribeIfNotSubscribedTo(nodeName);
             }
-            SPARQLQuery query = new SPARQLQuery(String.format(postTemplate, i, i , "pub"+i));
+            SPARQLQuery query = new SPARQLQuery();
+            query.wrapTriples(String.format(postTemplate, i, i , "pub"+i));
             p.publishQuery(query.toXML());
             logger.debug("Published query.");
         }
@@ -139,9 +140,9 @@ public class ScalabilityTest {
             e.printStackTrace();
             logger.debug(e);
             
-        } catch (ExtractionException e) {
-            e.printStackTrace();
-            logger.debug(e);
+//        } catch (ExtractionException e) {
+//            e.printStackTrace();
+//            logger.debug(e);
         } catch (QueryTypeException e) {
             e.printStackTrace();
             logger.debug(e.getMessage());
