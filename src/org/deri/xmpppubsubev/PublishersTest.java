@@ -70,8 +70,8 @@ public class PublishersTest {
           return queryString;
     }
     
-    public static String createQueryPosts(String pubName, int k) {
-        String postName = pubName  + "post" + k;
+    public static String createQueryPosts(String pubName) {
+//        String postName = pubName  + "post" + k;
         String queryString = "CONSTRUCT {"
           + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
           + "}  WHERE {"
@@ -110,12 +110,12 @@ public class PublishersTest {
 //                        p.getOrCreateNode(nodeName);
                     publishers.put(pubName,p);
                 }
-                String queryString = createQueryPost(pubName, k);
+                String queryString = createQueryPosts(pubName);
                 logger.debug(queryString);
                 triples = sw.runQuery(queryString, endpoint, false);
                 logger.debug(triples);
 
-                String msgId = this.createMsgId(i, k, sw.time); 
+                String msgId = this.createMsgId(i, sw.time); 
                 SPARQLQuery query = new SPARQLQuery();
                 query.wrapTriples(triples);
                 logger.debug(query.toXML());
@@ -142,36 +142,23 @@ public class PublishersTest {
             int numberPubs  = Integer.parseInt(args[0]);
             int numberSubs = Integer.parseInt(args[1]);
             int numberTriples = Integer.parseInt(args[2]);
-            int numberMsgs = Integer.parseInt(args[3]);
-//            boolean separatedPosts = Boolean.parseBoolean(args[2]);
-//            String fileName = "pub" + numberPubs + "post" + numberTriples 
-//                    + "separatedPosts" + String.valueOf(separatedPosts)
-//                    + "sub" + numberSubs  + ".csv";
+//            int numberMsgs = Integer.parseInt(args[3]);
             PublishersTest st = new PublishersTest(xmppServer, numberPubs,
-                    numberTriples, numberMsgs, endpoint);
+                    numberTriples, //numberMsgs, 
+                    endpoint);
             st.run();
             // give time to all the messages to send
             Thread.sleep(100*numberPubs*numberSubs);
-//            st.writer.close();           
             //insertTestTriples(1, 1000, "http://localhost:8000/update/");
         
         } catch(IOException e) {
-            e.printStackTrace();
-            logger.debug(e);  
-//        } catch (ExtractionException e) {
-//            e.printStackTrace();
-//            logger.debug(e);
-            
-        } 
-        catch(XMPPException e) {
-            e.printStackTrace();
-            logger.debug(e);        
+            logger.error(e);  
+        } catch(XMPPException e) {
+            logger.error(e);        
         } catch (QueryTypeException e) {
-            e.printStackTrace();
-            logger.debug(e.getMessage());
+            logger.error(e);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e);
         }
         
     }
