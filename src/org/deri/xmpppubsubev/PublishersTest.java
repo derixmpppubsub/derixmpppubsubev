@@ -8,6 +8,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import org.deri.xmpppubsub.*;
+import org.deri.xmpppubsubev.InitializePubsSubs;
 import org.jivesoftware.smack.XMPPException;
 
 public class PublishersTest {
@@ -19,17 +20,18 @@ public class PublishersTest {
     public static int numberOfTriples;
 //    public static int numberOfMsgs;
     public String endpoint;
+    public static String nameTest;
+    public static int MAXTRIPLES = 8200;
     
     static Logger logger = Logger.getLogger(PublishersTest.class);
     
-    public PublishersTest(String xmppServer, int numberOfPub, 
-            int numberOfTriples, //int numberOfMsgs, 
-            String endpoint) throws IOException {
-        numberOfPublishers = numberOfPub;
+    public PublishersTest(String xmppServer, String endpoint) throws IOException {
+//        numberOfPublishers = numberOfPub;
         this.xmppServer = xmppServer;
-        this.numberOfTriples = numberOfTriples;
+//        this.numberOfTriples = numberOfTriples;
 //        this.numberOfMsgs = numberOfMsgs;
         this.endpoint = endpoint;
+//        this.nameTest = nameTest;
         publishers = new HashMap<String, Publisher>();
     }
     
@@ -86,7 +88,7 @@ public class PublishersTest {
     public static String createMsgId(int i,Long time) {
 //        String msgId = "pub" + i + "of" + numberOfPublishers 
 //                + ",triples" + numberOfTriples + ",ctime" + time.toString();
-          String msgId = "pub" + i + "of" + numberOfPublishers 
+          String msgId = "pub" + nameTest + i + "of" + numberOfPublishers 
                 + "," + numberOfTriples + "," + time.toString();
         return msgId;
     }
@@ -103,31 +105,77 @@ public class PublishersTest {
             String nodeName = "";
             Publisher p = null;
             for (int i=1; i<=numberOfPublishers; i++) {
-                pubName = "pub" + i;
+                pubName = "pub" + nameTest + i;
                 p = publishers.get(pubName);
                 if (p == null) {
                     pubPass = pubName + "pass";
                     p = new Publisher(pubName, pubPass , xmppServer);
-//                        nodeName = "node" + i;
-//                        p.getOrCreateNode(nodeName);
+                    nodeName = "node" + i;
+                    p.getOrCreateNode(nodeName);
                     publishers.put(pubName,p);
                 }
-                String queryString = createQueryPosts(pubName);
-                logger.debug(queryString);
+                String queryString = createQueryPosts(pubName.replace(nameTest, ""));
+//                logger.debug(queryString);
                 triples = sw.runQuery(queryString, endpoint, false);
-                logger.debug(triples);
-
+                //logger.debug(triples);
+//                if (triples != null) {
+//                    logger.debug("returned triples");
+//                } else {
+//                    logger.debug("no triples");
+//                }
                 String msgId = this.createMsgId(i, sw.time); 
                 SPARQLQuery query = new SPARQLQuery();
                 query.wrapTriples(triples);
-                logger.debug(query.toXML());
+                //logger.debug(query.toXML());
                 p.publishQuery(query.toXML(), msgId);
                 logger.debug("Published query.");
             }
         } catch(OutOfMemoryError e){
             System.gc();
-            System.out.println("out of memory");
+            logger.error(e);
         }
+    }
+    
+    public void test1() throws XMPPException, IOException, QueryTypeException, InterruptedException {
+        this.numberOfPublishers = 1;
+        this.nameTest = "test1";
+        int numberSubs = 1;
+        int numberRun = 30;
+        for (int j=1;j<=MAXTRIPLES; j=j*10) {
+            this.numberOfTriples = j;
+            for (int i=1;i<=numberRun;i++) {
+                this.run();
+            }
+        }
+        this.numberOfTriples = MAXTRIPLES;
+        for (int i=1;i<=numberRun;i++) {
+            this.run();
+        }
+        publishers = null;
+        //Thread.sleep(100*numberOfPublishers*numberSubs);
+    }
+    
+    public void test2() throws XMPPException, IOException, QueryTypeException, InterruptedException {
+        int numberSubs = 10;
+//        for (int nS = 10; nS<=10000; nS=nS*10) {
+//        for(int t=2; t<=4; t++) {
+            int t = 2;
+            this.nameTest = "test" + t;
+            for(int nP = 1; nP<=100; nP=nP*10) {
+                this.numberOfPublishers = nP;
+                //init
+//                InitializePubsSubs ips = InitializePubsSubs(xmppServer, numberOfPublishers, 
+//                numberSubs, nameTest);
+//                ips.initialize;
+                for(int nT=1; nT<=100; nT=nT*10) {
+                    this.numberOfTriples = nT;
+                    for(int nR=1; nR <= 30; nR++) {
+                        this.run();
+                    }
+                }
+            }
+//        }
+       publishers = null;
     }
     
     public static void main(String[] args) {
@@ -136,21 +184,24 @@ public class PublishersTest {
             BasicConfigurator.configure();
             
             logger.setLevel(Level.DEBUG);
+            Logger.getRootLogger().setLevel(Level.DEBUG);
             logger.debug("Entering application.");
             // turn on the enhanced debugger
 //            XMPPConnection.DEBUG_ENABLED = true;
             String xmppServer = "localhost";
             String endpoint = "http://localhost:8001/sparql/";
-            int numberPubs  = Integer.parseInt(args[0]);
-            int numberSubs = Integer.parseInt(args[1]);
-            int numberTriples = Integer.parseInt(args[2]);
+//            int numberPubs  = Integer.parseInt(args[0]);
+//            int numberSubs = Integer.parseInt(args[1]);
+//            int numberTriples = Integer.parseInt(args[2]);
+//            String nameTest = args[3];
 //            int numberMsgs = Integer.parseInt(args[3]);
-            PublishersTest st = new PublishersTest(xmppServer, numberPubs,
-                    numberTriples, //numberMsgs, 
-                    endpoint);
-            st.run();
+            PublishersTest st = new PublishersTest(xmppServer,endpoint);
+            //st.run();
+            //st.test1();
+            st.test2();
+
             // give time to all the messages to send
-            Thread.sleep(100*numberPubs*numberSubs);
+            //Thread.sleep(100*numberPubs*numberSubs);
             //insertTestTriples(1, 1000, "http://localhost:8000/update/");
         
         } catch(IOException e) {

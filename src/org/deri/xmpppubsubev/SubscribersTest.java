@@ -21,16 +21,18 @@ public class SubscribersTest {
     public String xmppServer;
     public String fileName;
     public String endpoint;
+    public String nameTest;
     
     static Logger logger = Logger.getLogger(SubscribersTest.class);
     
     public SubscribersTest(String xmppServer, int numberOfSub, //int numberOfPub,
-            String fileName, String endpoint) {
+            String fileName, String endpoint, String nameTest) {
         numberOfSubscribers = numberOfSub;
         subscribers = new HashMap<String, Subscriber>();
         this.xmppServer = xmppServer;
         this.fileName = fileName;
         this.endpoint = endpoint;
+        this.nameTest = nameTest;
     }
     
     public void run() throws XMPPException, QueryTypeException, 
@@ -41,7 +43,7 @@ public class SubscribersTest {
         Subscriber s = null;
         try {
             for (int j=1; j<=numberOfSubscribers; j++) {  
-                subName = "sub" + j;
+                subName = "sub" + nameTest + j;
                 subPass = subName + "pass";  
                 s = new Subscriber(subName, subPass, xmppServer);
                 subscribers.put(subName, s);
@@ -58,15 +60,17 @@ public class SubscribersTest {
         try {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
+            Logger.getRootLogger().setLevel(Level.DEBUG);
             logger.debug("Entering application.");
             // turn on the enhanced debugger
             //XMPPConnection.DEBUG_ENABLED = true;
             String xmppServer = "localhost";
             String endpoint = "http://localhost:8000/update/";
             int numberSubs = Integer.parseInt(args[0]);
-            String fileName = "allTests.csv";
+            String nameTest = args[1];
+            String fileName = "results/pubssubs/allTests.csv";
             SubscribersTest st = new SubscribersTest(xmppServer, numberSubs, 
-                    fileName, endpoint);
+                    fileName, endpoint, nameTest);
             st.run();
             while (true) {
                 Thread.sleep(100);
