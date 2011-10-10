@@ -1,64 +1,35 @@
 package org.deri.xmpppubsubev;
 
-//import java.io.*;
-//import java.io.BufferedReader;
-//import java.io.File;
-//import java.io.FileNotFoundException;
-//import java.io.FileReader;
-//import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-//import java.util.ArrayList;
-//import java.util.StringTokenizer;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-//import org.deri.any23.extractor.ExtractionException;
 import org.deri.xmpppubsub.*;
-//import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-//import org.jivesoftware.smackx.pubsub.LeafNode;
 
 public class PublishersTest {
     public static int numberOfPublishers;
-//    public static int numberOfSubscribers;
-//    public static ArrayList<Publisher> publishers;
     HashMap<String, Publisher> publishers; 
-    //public static ArrayList<Subscriber> subscribers;
-    //public static int MAX_PUBLISHERS = 100;
     public static String postTemplate = "<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> .";
     public static String postCreatorTemplate = "<http://ecp-alpha/semantic/post/%s> <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> .";
     public String xmppServer;
     public static int numberOfTriples;
-    public static int numberOfMsgs;
-//    public static boolean separatedPosts;
+//    public static int numberOfMsgs;
     public String endpoint;
-//    public String fileName;
-//    public FileWriter writer;
     
     static Logger logger = Logger.getLogger(PublishersTest.class);
-    static Logger loggerp = Logger.getLogger(Publisher.class);
-    //static Logger loggers = Logger.getLogger(Subscriber.class);
     
-    public PublishersTest(String xmppServer, int numberOfPub, //int numberOfSub,
-            //String fileName, 
-            int numberOfTriples, //boolean separatedPosts, 
-            int numberOfMsgs, String endpoint) throws IOException {
+    public PublishersTest(String xmppServer, int numberOfPub, 
+            int numberOfTriples, //int numberOfMsgs, 
+            String endpoint) throws IOException {
         numberOfPublishers = numberOfPub;
-//        numberOfSubscribers = numberOfSub;
-        //publishers = new ArrayList<Publisher>();
-        //subscribers = new ArrayList<Subscriber>();
         this.xmppServer = xmppServer;
-//        this.fileName = fileName;
         this.numberOfTriples = numberOfTriples;
-        this.numberOfMsgs = numberOfMsgs;
-//        this.separatedPosts = separatedPosts;
+//        this.numberOfMsgs = numberOfMsgs;
         this.endpoint = endpoint;
-//        writer = new FileWriter(fileName, true);
         publishers = new HashMap<String, Publisher>();
     }
     
@@ -77,7 +48,7 @@ public class PublishersTest {
                         , "pub" + i + "post" +k, "pub" + i + "post" +k, "pub" + i);
             }
         }
-        logger.info(triples);
+        logger.debug(triples);
         queryString = "INSERT DATA {" + triples + "}";
         SPARQLWrapper sw = new SPARQLWrapper();
         String result = sw.runQuery(queryString, endpoint, true);
@@ -112,66 +83,44 @@ public class PublishersTest {
           return queryString;
     }
     
-    public static String createMsgId(int i, int k, Long time) {
+    public static String createMsgId(int i,Long time) {
         String msgId = "pub" + i + "of" + numberOfPublishers 
-                + ",msg" + k + "of" + numberOfTriples 
-                + ",triples" + 1 + ",ctime" + time.toString();
+                + ",triples" + numberOfTriples + ",ctime" + time.toString();
         return msgId;
     }
     
     public void run() throws XMPPException, IOException, QueryTypeException, 
             InterruptedException {
-        logger.info("number of publishers " + Integer.toString(numberOfPublishers));
-        //logger.info("number of subscribers " + Integer.toString(numberOfSubscribers));
-        logger.info("number of triples " + Integer.toString(numberOfTriples));
-//        logger.info("separated files " + Boolean.toString(separatedPosts));
-//        Writer outputWriter = null;
-//        File outputFile = new File(fileName);
-//        outputWriter = new BufferedWriter(new FileWriter(outputFile));
+        logger.debug("number of publishers " + Integer.toString(numberOfPublishers));
+//        logger.debug("number of triples " + Integer.toString(numberOfTriples));
         try {
-            
-           
+            String triples = "";
+            SPARQLWrapper sw = new SPARQLWrapper();       
+            String pubName = "";
+            String pubPass = "";
+            String nodeName = "";
+            Publisher p = null;
             for (int i=1; i<=numberOfPublishers; i++) {
-                if(Runtime.getRuntime().freeMemory()<1024*1024) System.gc();
-                String pubName = "pub" + i;
-                String pubPass = pubName + "pass";
-                
-                Publisher p = new Publisher(pubName, pubPass , xmppServer);
-                String nodeName = "node" + i;
-                p.getOrCreateNode(nodeName);
-                //publishers.add(p);
-                
-                String triples = "";
-                //diferent queries
-                //get query from repo
-                SPARQLWrapper sw = new SPARQLWrapper();
-//                if (separatedPosts) {
-                    for (int k=1; k<=numberOfTriples; k++) {  
-                        //String triples = String.format(postTemplate, k);
-                        String queryString = createQueryPost(pubName, k);
-                        logger.info(queryString);
-                        triples = sw.runQuery(queryString, endpoint, false);
-                        logger.info(triples);
-                        
-                        String msgId = this.createMsgId(i, k, sw.time); 
-                        SPARQLQuery query = new SPARQLQuery();
-                        query.wrapTriples(triples);
-                        logger.info(query.toXML());
-                        p.publishQuery(query.toXML(), msgId);
-                        logger.debug("Published query.");
-                    }
-//                } else {
-//                    String queryString = createQueryPosts(pubName, k);
-//                    logger.info(queryString);
-//                    triples = sw.runQuery(queryString, endpoint, false);
-//                    logger.info(triples);
-//                    
-//                    String msgId = this.createMsgId(i, i, sw.time); 
-//                    SPARQLQuery query = new SPARQLQuery();
-//                    query.wrapTriples(triples);
-//                    logger.debug(query.toXML());
-//                    p.publishQuery(query.toXML(), msgId);
-//                }
+                pubName = "pub" + i;
+                p = publishers.get(pubName);
+                if (p == null) {
+                    pubPass = pubName + "pass";
+                    p = new Publisher(pubName, pubPass , xmppServer);
+//                        nodeName = "node" + i;
+//                        p.getOrCreateNode(nodeName);
+                    publishers.put(pubName,p);
+                }
+                String queryString = createQueryPost(pubName, k);
+                logger.debug(queryString);
+                triples = sw.runQuery(queryString, endpoint, false);
+                logger.debug(triples);
+
+                String msgId = this.createMsgId(i, k, sw.time); 
+                SPARQLQuery query = new SPARQLQuery();
+                query.wrapTriples(triples);
+                logger.debug(query.toXML());
+                p.publishQuery(query.toXML(), msgId);
+                logger.debug("Published query.");
             }
         } catch(OutOfMemoryError e){
             System.gc();
