@@ -84,8 +84,10 @@ public class PublishersTest {
     }
     
     public static String createMsgId(int i,Long time) {
-        String msgId = "pub" + i + "of" + numberOfPublishers 
-                + ",triples" + numberOfTriples + ",ctime" + time.toString();
+//        String msgId = "pub" + i + "of" + numberOfPublishers 
+//                + ",triples" + numberOfTriples + ",ctime" + time.toString();
+          String msgId = "pub" + i + "of" + numberOfPublishers 
+                + "," + numberOfTriples + "," + time.toString();
         return msgId;
     }
     
