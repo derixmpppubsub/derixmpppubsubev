@@ -188,7 +188,8 @@ public class PublishersTest {
             logger.debug("Entering application.");
             // turn on the enhanced debugger
 //            XMPPConnection.DEBUG_ENABLED = true;
-            String xmppServer = "localhost";
+//            String xmppServer = "localhost";
+            String xmppServer = args[1];
             String endpoint = "http://localhost:8001/sparql/";
 //            int numberPubs  = Integer.parseInt(args[0]);
 //            int numberSubs = Integer.parseInt(args[1]);
@@ -198,7 +199,7 @@ public class PublishersTest {
             PublishersTest st = new PublishersTest(xmppServer,endpoint);
             //st.run();
             //st.test1();
-            st.test2();
+            if (args[0] == "test2") st.test2();
 
             // give time to all the messages to send
             //Thread.sleep(100*numberPubs*numberSubs);

@@ -64,11 +64,12 @@ public class SubscribersTest {
             logger.debug("Entering application.");
             // turn on the enhanced debugger
             //XMPPConnection.DEBUG_ENABLED = true;
-            String xmppServer = "localhost";
+//            String xmppServer = "localhost";
+            String xmppServer = args[2];
             String endpoint = "http://localhost:8000/update/";
             int numberSubs = Integer.parseInt(args[0]);
             String nameTest = args[1];
-            String fileName = "results/pubssubs/allTests.csv";
+            String fileName = "results/pubssubs/"+nameTest+".csv";
             SubscribersTest st = new SubscribersTest(xmppServer, numberSubs, 
                     fileName, endpoint, nameTest);
             st.run();
