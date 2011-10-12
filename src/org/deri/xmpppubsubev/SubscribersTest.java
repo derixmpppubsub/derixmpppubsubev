@@ -14,40 +14,41 @@ import org.jivesoftware.smack.XMPPException;
  *
  */
 public class SubscribersTest {
-    public static int numberOfSubscribers;
+//    public static int nSubs;
     public HashMap<String, Subscriber> subscribers;
     //public static int MAX_PUBLISHERS = 100;
     public static String postTemplate = "<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> .";
     public String xmppServer;
-    public String fileName;
     public String endpoint;
-    public String nameTest;
+//    public String fileName;
+//    public String nameTest;
     
     static Logger logger = Logger.getLogger(SubscribersTest.class);
     
-    public SubscribersTest(String xmppServer, int numberOfSub, //int numberOfPub,
-            String fileName, String endpoint, String nameTest) {
-        numberOfSubscribers = numberOfSub;
+    public SubscribersTest(String xmppServer, String endpoint) {
+//        nSubs = nSubs;
         subscribers = new HashMap<String, Subscriber>();
         this.xmppServer = xmppServer;
-        this.fileName = fileName;
+//        this.fileName = fileName;
         this.endpoint = endpoint;
-        this.nameTest = nameTest;
+//        this.nameTest = nameTest;
     }
     
-    public void run() throws XMPPException, QueryTypeException, 
+    public void runSubscribers(int nSubs, String nameTest, String fileName) 
+            throws XMPPException, 
+            QueryTypeException, 
             InterruptedException, IOException {
-        logger.debug("number of subscribers " + Integer.toString(numberOfSubscribers));
+        logger.debug("number of subscribers " + Integer.toString(nSubs));
         String subName = "";
         String subPass = "";
         Subscriber s = null;
         try {
-            for (int j=1; j<=numberOfSubscribers; j++) {  
-                subName = "sub" + nameTest + j;
+            for (int j=1; j<=nSubs; j++) {  
+                subName = nameTest + "sub" + j;
                 subPass = subName + "pass";  
                 s = new Subscriber(subName, subPass, xmppServer);
                 subscribers.put(subName, s);
-                s.addListenerToAllNodes(subName+ "of" + numberOfSubscribers, 
+                s.addListenerToAllNodes(subName+ "of" + nSubs, 
                         fileName, endpoint);
             }
         } catch(OutOfMemoryError e){
@@ -67,12 +68,11 @@ public class SubscribersTest {
 //            String xmppServer = "localhost";
             String xmppServer = args[2];
             String endpoint = "http://localhost:8000/update/";
-            int numberSubs = Integer.parseInt(args[0]);
-            String nameTest = args[1];
+            int nSubs = Integer.parseInt(args[0]);
+            String nameTest = "test" + args[1];
             String fileName = "results/pubssubs/"+nameTest+".csv";
-            SubscribersTest st = new SubscribersTest(xmppServer, numberSubs, 
-                    fileName, endpoint, nameTest);
-            st.run();
+            SubscribersTest st = new SubscribersTest(xmppServer, endpoint);
+            st.runSubscribers(nSubs, nameTest, fileName);
             while (true) {
                 Thread.sleep(100);
             }

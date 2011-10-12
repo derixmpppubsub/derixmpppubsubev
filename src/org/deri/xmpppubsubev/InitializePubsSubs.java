@@ -13,30 +13,30 @@ import org.jivesoftware.smack.XMPPException;
  */
 public class InitializePubsSubs {
     public String xmppServer;
-    public static int numberOfPublishers;
-    public static int numberOfSubscribers;
-    public static String nameTest;
+//    public static int nPubs;
+//    public static int nSubs;
+//    public static String nameTest;
     static Logger logger = Logger.getLogger(InitializePubsSubs.class);
     
     
-    public InitializePubsSubs(String xmppServer, int numberOfPub, 
-            int numberOfSub, String nameTest) {
-        numberOfPublishers = numberOfPub;
-        numberOfSubscribers = numberOfSub;
+    public InitializePubsSubs(String xmppServer) {
+//        nPubs = nPubs;
+//        nSubs = nSubs;
         this.xmppServer = xmppServer;
-        this.nameTest = nameTest;
+//        this.nameTest = nameTest;
     }
     
-    public void initialize() throws XMPPException, InterruptedException {
+    public void initialize(int nPubs, int nSubs, String nameTest) 
+            throws XMPPException, InterruptedException {
         String pubName = "";
         String pubPass = "";
         String nodeName = "";
         Publisher p = null;
-        for (int i=1; i<=numberOfPublishers; i++) {
-            pubName = "pub" + nameTest + i;
+        for (int i=1; i<=nPubs; i++) {
+            pubName = nameTest + "pub" +  i;
             pubPass = pubName + "pass";
             p = new Publisher(pubName, pubPass , xmppServer);
-            nodeName = "node" + i;
+            nodeName = nameTest + "node" + i;
             p.getOrCreateNode(nodeName);
             p.disconnect();
             p = null;
@@ -45,12 +45,12 @@ public class InitializePubsSubs {
         String subName = "";
         String subPass = "";
         Subscriber s = null;
-        for (int j=1; j<=numberOfSubscribers; j++) {  
+        for (int j=1; j<=nSubs; j++) {  
 //            if(Runtime.getRuntime().freeMemory()<1024*1024) System.gc();
-            subName = "sub" + nameTest  + j;
+            subName = nameTest  + "sub" + j;
             subPass = subName + "pass";  
             s = new Subscriber(subName, subPass, xmppServer);
-            for (int i=1; i<=numberOfPublishers; i++) {
+            for (int i=1; i<=nPubs; i++) {
                 nodeName = "node" + i;
                 s.subscribeIfNotSubscribedTo(nodeName);
             }
@@ -69,9 +69,11 @@ public class InitializePubsSubs {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
             logger.debug("Entering application.");
-            InitializePubsSubs ips = new InitializePubsSubs(domain, Integer.parseInt(args[0]), 
-                    Integer.parseInt(args[1]), args[2]);
-            ips.initialize();
+            int nPubs = Integer.parseInt(args[0]);
+            int nSubs = Integer.parseInt(args[1]);
+            String nameTest = "test" + args[2];
+            InitializePubsSubs ips = new InitializePubsSubs(domain);
+            ips.initialize(nPubs, nSubs, nameTest);
         } catch (InterruptedException e) {
             logger.error(e);
         } catch (XMPPException e) {
