@@ -4,7 +4,7 @@
 nbproject/
 build/
 bin/
-lib/
+lib/*.jar
 dist/
 config/
 *~
