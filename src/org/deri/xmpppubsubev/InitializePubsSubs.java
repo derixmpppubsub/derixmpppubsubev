@@ -51,7 +51,7 @@ public class InitializePubsSubs {
             subPass = subName + "pass";  
             s = new Subscriber(subName, subPass, xmppServer);
             for (int i=1; i<=nPubs; i++) {
-                nodeName = "node" + i;
+                nodeName = nameTest +"node" + i;
                 s.subscribeIfNotSubscribedTo(nodeName);
             }
             s.disconnect();

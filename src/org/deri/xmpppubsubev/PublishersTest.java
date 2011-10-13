@@ -108,17 +108,17 @@ public class PublishersTest {
                 if (p == null) {
                     pubPass = pubName + "pass";
                     p = new Publisher(pubName, pubPass , xmppServer);
-                    nodeName = "node" + i;
+                    nodeName = nameTest + "node" + i;
                     p.getOrCreateNode(nodeName);
                     publishers.put(pubName,p);
                 }
                 String queryString = createQueryPosts(
-                        pubName, nTriples);
+                        pubName.replace(nameTest,""), nTriples);
 //                logger.debug(queryString);
                 Object[] ret = SPARQLWrapper.runQuery(queryString, endpoint, false);
                 time = (Long)ret[1];
                 triples = (String)ret[0];
-                //logger.debug(triples);
+//                logger.debug(triples);
 //                if (triples != null) {
 //                    logger.debug("returned triples");
 //                } else {
@@ -188,6 +188,74 @@ public class PublishersTest {
         publishers = null;
     }
     
+    public void testTest(String t) throws XMPPException, IOException, QueryTypeException, InterruptedException {
+        double nSubs = java.lang.Math.pow(10, Integer.parseInt(t)-1);
+//        for (int nS = 10; nS<=10000; nS=nS*10) {
+//        for(int t=2; t<=4; t++) {
+        String nameTest = "test" + 4;
+            
+            //init
+//            InitializePubsSubs ips = new InitializePubsSubs(xmppServer);
+//            ips.initialize(100, (int)nSubs, nameTest);
+//            insertTestTriples(100, 100, nameTest);
+                
+            for(int nP = 1; nP<=1; nP=nP*10) {
+//                this.nPubs = nP;
+                logger.debug("Publisher : " + nP);
+                
+                for(int nT=1; nT<=100; nT=nT*10) {
+//                    this.nTriples = nT;
+                    logger.debug("Triples: " + nT);
+                    for(int nR=1; nR <= 1; nR++) {
+                        this.runPublishers(nP, nT, nameTest);
+                    }
+                }
+            }
+//        }
+        publishers = null;
+        
+    }
+    
+    
+    public void allTests(String t) throws XMPPException, IOException, QueryTypeException, InterruptedException {
+        String nameTest = "test" + 4;
+        int nS, nP, nT;
+        nS = 100;
+        nP = 1;
+        nT = 1;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nT = 10;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nT = 100;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nP = 10;
+        nT = 1;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nT = 10;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nT = 100;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nP = 100;
+        nT = 1;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nT = 10;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        nT = 100;
+        this.runPublishers(nP, nT, nameTest);
+        Thread.sleep(5000);
+        
+        publishers = null;
+        
+    }
+    
     public static void main(String[] args) {
         try {
             // Set up a simple configuration that logs on the console.
@@ -209,7 +277,9 @@ public class PublishersTest {
             PublishersTest st = new PublishersTest(xmppServer,endpoint);
             //st.run();
             //st.test1();
-            st.test(args[1]);
+////            st.test(args[1]);
+//            st.testTest(args[1]);
+            st.allTests(args[1]);
 //            if (args[1].equals("test2")) 
 //                st.test2();
 

@@ -1,0 +1,10 @@
+.classpath
+.project
+.settings/
+nbproject/
+build/
+bin/
+lib/
+dist/
+config/
+*~

@@ -3,7 +3,7 @@
 set terminal png
 
 # save file to "out.png"
-set output "out.png"
+set output "results/1pub100sub.png"
 
 # graph title
 set title "1 pub, 100 sub"
@@ -15,10 +15,10 @@ set size 1,0.7
 set grid y
 
 # x-axis label
-set xlabel "item"
+set xlabel "number of subscribers"
 
 # y-axis label
-set ylabel "response time (nanosecs)"
+set ylabel "message elapsed time (millisecs)"
 
 set datafile separator ","
 
@@ -26,6 +26,6 @@ set datafile separator ","
 # and title of "nodejs" for the given data
 #plot "1pub100sub-results.csv" using 9 smooth sbezier with lines title "XMMP PubSub"
 
-plot "1pub100sub-results.csv" 
+plot "results/1pub100sub-results.csv" 
 
 #gnuplog plot.t
