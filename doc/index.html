@@ -1,0 +1,152 @@
+<h1 id="evaluation-tests-installation">Evaluation tests installation</h1>
+<p>The tests are setup in 3 coputers:</p>
+<ul>
+<li>computer1, the XMPP hub: Ubuntu natty with Openfire</li>
+<li>computer2, the publishers : Debian sid with publishers + 4store</li>
+<li>computer3, the subscribers : Debian sid with Subscribers +4store</li>
+</ul>
+<p>SW used for the tests:</p>
+<ul>
+<li>openfire 3.7.0</li>
+<li>4store 1.1.3-1</li>
+<li>openjdk-6-jdk</li>
+</ul>
+<h2 id="setup-the-xmpp-hub-computer">Setup the XMPP hub computer</h2>
+<ol>
+<li>First, you need mysql installed:</li>
+</ol>
+<blockquote>
+<p>$ sudo aptitude install mysql-server</p>
+</blockquote>
+<ol>
+<li>Create the database that Openfire will use:</li>
+</ol>
+<blockquote>
+<p>$ mysql -u root -p</p>
+<p>$ mysql&gt; create database openfire;</p>
+<p>$ mysql&gt; grant all privileges on openfire.* to 'openfire'@'localhost' identified by 'openfirepw';</p>
+<p>$ mysql&gt; flush privileges;</p>
+<p>$ mysql&gt; quit</p>
+</blockquote>
+<ol>
+<li>Download openfire_3.7.0_all.deb through the web or by command line:</li>
+</ol>
+<blockquote>
+<p>$ wget <a href="http://www.igniterealtime.org/downloadServlet?filename=openfire/openfire_3.7.0_all.deb">http://www.igniterealtime.org/downloadServlet?filename=openfire/openfire_3.7.0_all.deb</a></p>
+<p>$ sudo dpkg -i openfire_3.7.0_all.deb</p>
+</blockquote>
+<ol>
+<li>You can now finish the Openfire installation through the web at localhost:9090. In the DB setup step, choose MySQL, write &quot;jdbc:mysql://localhost:3306/openfire&quot; as Connection URL, and enter the username and password you used when creating the db.</li>
+</ol>
+<h2 id="setup-subscribers-computer">Setup subscribers computer</h2>
+<ol>
+<li>Install 4store:</li>
+</ol>
+<blockquote>
+<p>$ sudo aptitude install 4store</p>
+</blockquote>
+<p>After that, you should have also installed:</p>
+<blockquote>
+<p>libraptor1 1.4.21-6 libraptor2-0 2.0.4-1 librasqal3 0.9.27-1</p>
+</blockquote>
+<ol>
+<li>Install java and ant:</li>
+</ol>
+<blockquote>
+<p>$ sudo aptitude install ant openjdk-6-jdk openjdk-6-jre</p>
+</blockquote>
+<ol>
+<li>Get the source code:</li>
+</ol>
+<blockquote>
+<p>$ git clone <a href="https://github.com/derixmpppubsub/derixmpppubsub">https://github.com/derixmpppubsub/derixmpppubsub</a> $ git clone <a href="https://github.com/derixmpppubsub/derixmpppubsubev">https://github.com/derixmpppubsub/derixmpppubsubev</a></p>
+</blockquote>
+<ol>
+<li>Compile the code:</li>
+</ol>
+<blockquote>
+<p>$ cd derixmpppubsub</p>
+<p>$ sh ./getjars.sh</p>
+<p>$ ant jar</p>
+<p>$ cd ../derixmpppubsubev</p>
+<p>$ sh ./getjars.sh</p>
+<p>$ ant compile</p>
+</blockquote>
+<p>Alternative, you can just execute the setup.sh file in <a href="https://github.com/derixmpppubsub/derixmpppubsubev">https://github.com/derixmpppubsub/derixmpppubsubev</a></p>
+<h2 id="setup-publishers-computer">Setup publishers computer</h2>
+<p>The steps to initialize the publishers computer are the same as for the subscribers</p>
+<h2 id="initializerun-the-tests">Initialize/run the tests</h2>
+<p>Depending on the tests to run, you will run different initializations</p>
+<h3 id="initialize-the-xmpp-hub-registered-publishers-and-subscribers">Initialize the XMPP hub registered publishers and subscribers</h3>
+<p>You can do it in three different ways:</p>
+<ol>
+<li>Download and compile the code as explained above and run :</li>
+</ol>
+<blockquote>
+<p>$ java -Xmx2048m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:../derixmpppubsub/build/classes org.deri.xmpppubsubev.InitializePubSubs numberPublishers numberSubscribers numberTest</p>
+</blockquote>
+<ol>
+<li>import one of the tests db availabe in data/, for instance:</li>
+</ol>
+<blockquote>
+<p>$ mysql -u openfire -p openfire &lt; data/openfire100pub10sub.sql</p>
+</blockquote>
+<dl>
+<dt>With this method you have to previously shutdown the server:</dt>
+<dd><p>$ /etc/init.d/openfire stop</p>
+</dd>
+<dt>And after importing the db, start it:</dt>
+<dd><p>$ /etc/init.d/openfire start</p>
+</dd>
+</dl>
+<ol>
+<li>Some of the options for the PublishersTest include the XMPP server initialization, see below</li>
+</ol>
+<dl>
+<dt>If you need to trace Openfire or give it more memory, run it in this way:</dt>
+<dd><p>$ sudo su -s /bin/bash - openfire $ strace -f -e !futex,gettimeofday -o openfire.strace /usr/lib/jvm/java-6-sun/bin/java -Xmx1024m -server -DopenfireHome=/usr/share/openfire -Dopenfire.lib.dir=/usr/share/openfire/lib -classpath /usr/share/openfire/lib/startup.jar -jar /usr/share/openfire/lib/startup.jar</p>
+</dd>
+</dl>
+<h3 id="initialize-subscribers">Initialize subscribers</h3>
+<ol>
+<li>Create the store:</li>
+</ol>
+<blockquote>
+<p>$ sudo 4s-backend-setup subscribers</p>
+</blockquote>
+<ol>
+<li>Run the store:</li>
+</ol>
+<blockquote>
+<p>$ sudo 4s-backend subscribers # sudo 4s-httpd -s -1 -p 8000 subscribers</p>
+</blockquote>
+<h3 id="run-subscribers">Run Subscribers</h3>
+<blockquote>
+<p>$ java -Xmx2048m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar org.deri.xmpppubsubev.SubscribersTest numberSubscribers numberTest xmppServerIP</p>
+</blockquote>
+<h3 id="initialize-publishers">Initialize publishers</h3>
+<ol>
+<li>Create the store:</li>
+</ol>
+<blockquote>
+<p>$ sudo 4s-backend-setup publishers</p>
+</blockquote>
+<ol>
+<li>Run the store:</li>
+</ol>
+<blockquote>
+<p>$ sudo 4s-backend publishers # sudo 4s-httpd -s -1 -p 8001 publishers</p>
+</blockquote>
+<ol>
+<li>Import data into the publishers store</li>
+</ol>
+<p>You can manually import the data, for instance:</p>
+<blockquote>
+<p>$ sudo 4s-import -v -f ntriples publishers data/100pub10000postsinitialtriples.nt</p>
+</blockquote>
+<p>Or it will be imported automatically depending on the test</p>
+<h3 id="run-publishers">Run Publishers</h3>
+<blockquote>
+<p>$ java -Xmx2048m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:../derixmpppubsub/build/classes org.deri.xmpppubsubev.PublishersTest xmppServerIP numberTest</p>
+</blockquote>
+<p>Enjoy!</p>
