@@ -12,7 +12,7 @@ import org.deri.xmpppubsub.*;
 import org.jivesoftware.smack.XMPPException;
 
 public class PublishersTest {
-    HashMap<String, Publisher> publishers; 
+    HashMap<String, Publisher> publishers;
     public static String postTemplate = "<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> .";
     public static String postCreatorTemplate = "<http://ecp-alpha/semantic/post/%s> <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> .";
     public String xmppServer;
@@ -23,9 +23,9 @@ public class PublishersTest {
 //    public static String nameTest;
     public static int MAXTRIPLES = 8200;
     public static int NRUNS = 1;
-    
+
     static Logger logger = Logger.getLogger(PublishersTest.class);
-    
+
     public PublishersTest(String xmppServer, String endpoint) throws IOException {
 //        nPubs = numberOfPub;
         this.xmppServer = xmppServer;
@@ -35,17 +35,17 @@ public class PublishersTest {
 //        this.nameTest = nameTest;
         publishers = new HashMap<String, Publisher>();
     }
-    
-    public void insertTestTriples(int nPubs, int nTriples, String nameTest) 
+
+    public void insertTestTriples(int nPubs, int nTriples, String nameTest)
             throws UnsupportedEncodingException, IOException {
         String queryString = "";
         String triples = "";
 //        SPARQLWrapper sw = new SPARQLWrapper();
         for (int i=1; i<=nPubs; i++) {
             for (int k=1; k<=nTriples; k++) {
-                triples += String.format(postTemplate 
+                triples += String.format(postTemplate
                         + "<http://ecp-alpha/semantic/post/%s> <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> . "
-                        ,  nameTest + "pub" + i + "post" +k, 
+                        ,  nameTest + "pub" + i + "post" +k,
                         nameTest + "pub" + i + "post" +k, "pub" + i);
             }
         }
@@ -55,7 +55,7 @@ public class PublishersTest {
 //        Object[] ret = SPARQLWrapper.runQuery(queryString, endpoint, true);
         SPARQLWrapper.runQuery(queryString, endpoint, true);
     }
-    
+
     public String createQueryPost(String pubName, int k) {
         String postName = pubName  + "post" + k;
         String queryString = "CONSTRUCT {"
@@ -66,37 +66,37 @@ public class PublishersTest {
           +"}";
           return queryString;
     }
-    
+
     public String createQueryPosts(String pubName, int nTriples) {
 //        String postName = pubName  + "post" + k;
         String queryString = "CONSTRUCT {"
           + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
           + "}  WHERE {"
-          + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "       
+          + "?post <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> . "
           + String.format("?post <http://purl.org/dc/elements/1.1/creator> <http://ecp-alpha/semantic/employee/%s> . ", pubName)
 //          + String.format("FILTER (REGEX(str(?post), '^http://ecp-alpha/semantic/post/%spost')) . ", pubName)
           +"}"
           + String.format(" LIMIT %s", nTriples);
           return queryString;
     }
-    
-    public String createMsgId(String pubName ,Long time, 
+
+    public String createMsgId(String pubName ,Long time,
             int nTriples) {
-//        String msgId = "pub" + i + "of" + nPubs 
+//        String msgId = "pub" + i + "of" + nPubs
 //                + ",triples" + nTriples + ",ctime" + time.toString();
-          String msgId = pubName 
+          String msgId = pubName
                 + "," + nTriples + "," + time.toString();
         return msgId;
     }
-    
-    public void runPublishers(int nPubs, int nTriples, 
-            String nameTest) throws XMPPException, IOException, QueryTypeException, 
+
+    public void runPublishers(int nPubs, int nTriples,
+            String nameTest) throws XMPPException, IOException, QueryTypeException,
             InterruptedException {
         //logger.debug("number of publishers " + Integer.toString(nPubs));
 //        logger.debug("number of triples " + Integer.toString(nTriples));
         try {
             String triples = "";
-//            SPARQLWrapper sw = new SPARQLWrapper();       
+//            SPARQLWrapper sw = new SPARQLWrapper();
             String pubName = "";
             String pubPass = "";
             String nodeName = "";
@@ -110,6 +110,7 @@ public class PublishersTest {
                     p = new Publisher(pubName, pubPass , xmppServer);
                     nodeName = nameTest + "node" + i;
                     p.getOrCreateNode(nodeName);
+                    p.getNode(nodeName);
                     publishers.put(pubName,p);
                 }
                 String queryString = createQueryPosts(
@@ -125,7 +126,7 @@ public class PublishersTest {
 //                    logger.debug("no triples");
 //                }
                 String msgId = this.createMsgId(pubName + "of" + nPubs, time,
-                        nTriples); 
+                        nTriples);
                 SPARQLQuery query = new SPARQLQuery();
                 query.wrapTriples(triples);
                 //logger.debug(query.toXML());
@@ -137,23 +138,23 @@ public class PublishersTest {
             logger.error(e);
         }
     }
-    
+
     public void test(String t) throws XMPPException, IOException, QueryTypeException, InterruptedException {
         double nSubs = java.lang.Math.pow(10, Integer.parseInt(t)-1);
 //        for (int nS = 10; nS<=10000; nS=nS*10) {
 //        for(int t=2; t<=4; t++) {
         String nameTest = "test" + t;
         if (!t.equals("1")) {
-            
+
             //init
             InitializePubsSubs ips = new InitializePubsSubs(xmppServer);
             ips.initialize(100, (int)nSubs, nameTest);
             insertTestTriples(100, 100, nameTest);
-                
+
             for(int nP = 1; nP<=100; nP=nP*10) {
 //                this.nPubs = nP;
                 logger.debug("Publisher : " + nP);
-                
+
                 for(int nT=1; nT<=100; nT=nT*10) {
 //                    this.nTriples = nT;
                     logger.debug("Triples: " + nT);
@@ -166,12 +167,12 @@ public class PublishersTest {
         } else {
             int nPubs = 1;
             nSubs = 1;
-            
+
             //init
             InitializePubsSubs ips = new InitializePubsSubs(xmppServer);
             ips.initialize(nPubs, (int)nSubs, nameTest);
             insertTestTriples(1, MAXTRIPLES, nameTest);
-            
+
             int nRuns = NRUNS;
             int nTriples;
             for (int j=1;j<=MAXTRIPLES; j=j*10) {
@@ -184,25 +185,25 @@ public class PublishersTest {
             for (int i=1;i<=nRuns;i++) {
                 this.runPublishers(nPubs, nTriples, "test" +1);
             }
-        } 
+        }
         publishers = null;
     }
-    
+
     public void testTest(String t) throws XMPPException, IOException, QueryTypeException, InterruptedException {
         double nSubs = java.lang.Math.pow(10, Integer.parseInt(t)-1);
 //        for (int nS = 10; nS<=10000; nS=nS*10) {
 //        for(int t=2; t<=4; t++) {
         String nameTest = "test" + 4;
-            
+
             //init
 //            InitializePubsSubs ips = new InitializePubsSubs(xmppServer);
 //            ips.initialize(100, (int)nSubs, nameTest);
 //            insertTestTriples(100, 100, nameTest);
-                
+
             for(int nP = 1; nP<=1; nP=nP*10) {
 //                this.nPubs = nP;
                 logger.debug("Publisher : " + nP);
-                
+
                 for(int nT=1; nT<=100; nT=nT*10) {
 //                    this.nTriples = nT;
                     logger.debug("Triples: " + nT);
@@ -213,10 +214,10 @@ public class PublishersTest {
             }
 //        }
         publishers = null;
-        
+
     }
-    
-    
+
+
     public void allTests(String t) throws XMPPException, IOException, QueryTypeException, InterruptedException {
         String nameTest = "test" + 4;
         int nS, nP, nT;
@@ -251,16 +252,16 @@ public class PublishersTest {
         nT = 100;
         this.runPublishers(nP, nT, nameTest);
         Thread.sleep(5000);
-        
+
         publishers = null;
-        
+
     }
-    
+
     public static void main(String[] args) {
         try {
             // Set up a simple configuration that logs on the console.
             BasicConfigurator.configure();
-            
+
             logger.setLevel(Level.DEBUG);
             Logger.getRootLogger().setLevel(Level.DEBUG);
             logger.debug("Entering application.");
@@ -280,22 +281,22 @@ public class PublishersTest {
 ////            st.test(args[1]);
 //            st.testTest(args[1]);
             st.allTests(args[1]);
-//            if (args[1].equals("test2")) 
+//            if (args[1].equals("test2"))
 //                st.test2();
 
             // give time to all the messages to send
             //Thread.sleep(100*nPubs*nSubs);
             //insertTestTriples(1, 1000, "http://localhost:8000/update/");
-        
+
         } catch(IOException e) {
-            logger.error(e);  
+            logger.error(e);
         } catch(XMPPException e) {
-            logger.error(e);        
+            logger.error(e);
         } catch (QueryTypeException e) {
             logger.error(e);
         } catch (InterruptedException e) {
             logger.error(e);
         }
-        
+
     }
 }
