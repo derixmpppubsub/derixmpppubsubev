@@ -5,7 +5,8 @@ numPubs = 100
 numTriples = 10000
 for i in range(1,numPubs+1):
     for j in range(1,numTriples+1):
-        post = "pub" + str(i) + "post" + str(j)
+        # post = "pub" + str(i) + "post" + str(j)
+        post = "post" + str(j)
         employee = "pub" + str(i)
         triples += postTemplate  %  (post, post, employee)
 

@@ -14,69 +14,87 @@ import org.jivesoftware.smack.XMPPException;
  *
  */
 public class SubscribersTest {
-//    public static int nSubs;
     public HashMap<String, Subscriber> subscribers;
-    //public static int MAX_PUBLISHERS = 100;
-    public static String postTemplate = "<http://ecp-alpha/semantic/post/%s> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/sioc/ns#Post> .";
     public String xmppServer;
     public String endpoint;
-//    public String fileName;
-//    public String nameTest;
-    
+    public static String userPassTemplate = "%spass";
+    public static String subNameTemplate = "sub%s";
+    public static String fileHeadersTemplate = "nTests,nSubs,nPubs,nTriples,"
+            + "subName,pubName,tPubStore, tPushMsg, tSubStore, tTotal\n";
+//    public static String msgIdTemplate = "%s,%s,%s,%s,%s,%s,%s";
+//                    //nTests,nSubs,nPubs,nTriples,pubName,tPubStore,tStartMsg
+    public static String fileNameTemplate = "results/nSubs%snPubs%snTriples%s.csv";
+
     static Logger logger = Logger.getLogger(SubscribersTest.class);
-    
+
+    /**
+     *
+     * @param xmppServer
+     * @param endpoint
+     */
     public SubscribersTest(String xmppServer, String endpoint) {
-//        nSubs = nSubs;
         subscribers = new HashMap<String, Subscriber>();
         this.xmppServer = xmppServer;
-//        this.fileName = fileName;
         this.endpoint = endpoint;
-//        this.nameTest = nameTest;
     }
-    
-    public void runSubscribers(int nSubs, String nameTest, String fileName) 
-            throws XMPPException, 
-            QueryTypeException, 
-            InterruptedException, IOException {
-        logger.debug("number of subscribers " + Integer.toString(nSubs));
+
+    public void runSubscribers(int nSubs)
+            throws XMPPException, QueryTypeException, InterruptedException,
+            IOException {
+        logger.debug("nSubs: " + Integer.toString(nSubs));
+
         String subName = "";
         String subPass = "";
         Subscriber s = null;
         try {
-            for (int j=1; j<=nSubs; j++) {  
-                subName = nameTest + "sub" + j;
-                subPass = subName + "pass";  
+            for (int nSub=1; nSub<=nSubs; nSub++) {
+                subName = String.format(subNameTemplate, nSub);
+                subPass = String.format(userPassTemplate, subName);
                 s = new Subscriber(subName, subPass, xmppServer);
                 subscribers.put(subName, s);
-                s.addListenerToAllNodes(subName+ "of" + nSubs, 
-                        fileName, endpoint);
+                s.addListenerToAllNodes(subName);
             }
         } catch(OutOfMemoryError e){
             System.gc();
             System.out.println("out of memory");
         }
     }
-    
+
     public static void main(String[] args) {
         try {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
             Logger.getRootLogger().setLevel(Level.DEBUG);
-            logger.debug("Entering application.");
-            // turn on the enhanced debugger
-            //XMPPConnection.DEBUG_ENABLED = true;
-//            String xmppServer = "localhost";
-            String xmppServer = args[2];
-            String endpoint = "http://localhost:8000/update/";
-            int nSubs = Integer.parseInt(args[0]);
-            String nameTest = "test" + args[1];
-            String fileName = "results/pubssubs/"+nameTest+".csv";
-            SubscribersTest st = new SubscribersTest(xmppServer, endpoint);
-            st.runSubscribers(nSubs, nameTest, fileName);
-            while (true) {
-                Thread.sleep(100);
+
+//            XMPPConnection.DEBUG_ENABLED = true;
+
+            String usage = "SubscribersTest xmppserver nSubs";
+            String usageExample = "SubscribersTest 192.168.1.2 1";
+            if (args.length < 2) {
+               System.out.println("Incorrect number of arguments");
+               System.out.println("Usage: " + usage);
+               System.out.println("Example: " + usageExample);
+               System.exit(0);
             }
-        
+
+            String endpoint = "http://localhost:8000/update/";
+
+            String xmppServer = args[0];
+            int nSubs = Integer.parseInt(args[1]);
+
+            logger.info("The file header created will be: "
+                    + fileHeadersTemplate);
+            String fileName = String.format(fileNameTemplate, nSubs, "x", "y");
+            logger.info("The file name created by the subscribers will be: "
+                    + fileName);
+
+            SubscribersTest st = new SubscribersTest(xmppServer, endpoint);
+            st.runSubscribers(nSubs);
+
+            while (true) {
+                Thread.sleep(1000);
+            }
+
         } catch(XMPPException e) {
             logger.error(e);
         } catch(IOException e) {
@@ -86,6 +104,11 @@ public class SubscribersTest {
         } catch (InterruptedException e) {
             logger.error(e);
         }
-        
+//        } finally {
+//            for(Subscriber s : st.subscribers.values()) {
+//                s.disconnect();
+//            }
+//        }
+
     }
 }

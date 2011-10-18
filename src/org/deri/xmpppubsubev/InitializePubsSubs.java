@@ -5,6 +5,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.deri.xmpppubsub.Publisher;
 import org.deri.xmpppubsub.Subscriber;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
 /**
@@ -13,30 +14,32 @@ import org.jivesoftware.smack.XMPPException;
  */
 public class InitializePubsSubs {
     public String xmppServer;
-//    public static int nPubs;
-//    public static int nSubs;
-//    public static String nameTest;
     static Logger logger = Logger.getLogger(InitializePubsSubs.class);
-    
-    
+
+    /**
+     *
+     * @param xmppServer
+     */
     public InitializePubsSubs(String xmppServer) {
-//        nPubs = nPubs;
-//        nSubs = nSubs;
         this.xmppServer = xmppServer;
-//        this.nameTest = nameTest;
     }
-    
-    public void initialize(int nPubs, int nSubs, String nameTest) 
+
+    public void initialize(int nSubs, int nPubs, String pubNameTemplate,
+            String userPassTemplate, String nodeNameTemplate,
+            String subNameTemplate)
             throws XMPPException, InterruptedException {
         String pubName = "";
         String pubPass = "";
         String nodeName = "";
         Publisher p = null;
-        for (int i=1; i<=nPubs; i++) {
-            pubName = nameTest + "pub" +  i;
-            pubPass = pubName + "pass";
+        logger.debug("nSubs: "+nSubs);
+        logger.debug("nPubs: "+nPubs);
+        for (int nPub=1; nPub<=nPubs; nPub++) {
+            logger.debug("nPub: "+nPub);
+            pubName = String.format(pubNameTemplate, nPub);
+            pubPass = String.format(userPassTemplate, pubName);
             p = new Publisher(pubName, pubPass , xmppServer);
-            nodeName = nameTest + "node" + i;
+            nodeName = String.format(nodeNameTemplate, nPub);
             p.getOrCreateNode(nodeName);
             p.disconnect();
             p = null;
@@ -45,35 +48,54 @@ public class InitializePubsSubs {
         String subName = "";
         String subPass = "";
         Subscriber s = null;
-        for (int j=1; j<=nSubs; j++) {  
-//            if(Runtime.getRuntime().freeMemory()<1024*1024) System.gc();
-            subName = nameTest  + "sub" + j;
-            subPass = subName + "pass";  
+        for (int nSub=1; nSub<=nSubs; nSub++) {
+            logger.debug("nSub: "+nSub);
+            subName = String.format(subNameTemplate, nSub);
+            subPass = String.format(subNameTemplate, subName);
             s = new Subscriber(subName, subPass, xmppServer);
             for (int i=1; i<=nPubs; i++) {
-                nodeName = nameTest +"node" + i;
+                nodeName = String.format(nodeNameTemplate, i);
                 s.subscribeIfNotSubscribedTo(nodeName);
+                logger.debug("subscribed to " + nodeName);
             }
             s.disconnect();
             s = null;
             Runtime.getRuntime().gc();
         }
     }
-    
+
     public static void main(String[] args) {
         String domain="localhost";
         int port=5222;
 
+        String pubNameTemplate = "pub%s";
+        String userPassTemplate = "%spass";
+        String nodeNameTemplate = "node%s";
+        String subNameTemplate = "sub%s";
+
         try {
-//            XMPPConnection.DEBUG_ENABLED = true;
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
+
+            XMPPConnection.DEBUG_ENABLED = true;
+
             logger.debug("Entering application.");
-            int nPubs = Integer.parseInt(args[0]);
+            String usage = "InitializePubsSubs xmppserver nSubs nPubs";
+            String usageExample = "InitializePubsSubs 192.168.1.2 1 1";
+            if (args.length < 3) {
+               System.out.println("Incorrect number of arguments");
+               System.out.println("Usage: " + usage);
+               System.out.println("Example: " + usageExample);
+               System.exit(0);
+            }
+
+            domain = args[0];
             int nSubs = Integer.parseInt(args[1]);
-            String nameTest = "test" + args[2];
+            int nPubs = Integer.parseInt(args[2]);
+
             InitializePubsSubs ips = new InitializePubsSubs(domain);
-            ips.initialize(nPubs, nSubs, nameTest);
+            ips.initialize(nSubs, nPubs, pubNameTemplate, userPassTemplate,
+                    nodeNameTemplate, subNameTemplate);
         } catch (InterruptedException e) {
             logger.error(e);
         } catch (XMPPException e) {
