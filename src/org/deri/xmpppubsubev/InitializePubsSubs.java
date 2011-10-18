@@ -51,7 +51,7 @@ public class InitializePubsSubs {
         for (int nSub=1; nSub<=nSubs; nSub++) {
             logger.debug("nSub: "+nSub);
             subName = String.format(subNameTemplate, nSub);
-            subPass = String.format(subNameTemplate, subName);
+            subPass = String.format(userPassTemplate, subName);
             s = new Subscriber(subName, subPass, xmppServer);
             for (int i=1; i<=nPubs; i++) {
                 nodeName = String.format(nodeNameTemplate, i);

@@ -7,6 +7,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import org.deri.xmpppubsub.*;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
 /**
@@ -66,7 +67,7 @@ public class SubscribersTest {
             logger.setLevel(Level.DEBUG);
             Logger.getRootLogger().setLevel(Level.DEBUG);
 
-//            XMPPConnection.DEBUG_ENABLED = true;
+            XMPPConnection.DEBUG_ENABLED = true;
 
             String usage = "SubscribersTest xmppserver nSubs";
             String usageExample = "SubscribersTest 192.168.1.2 1";
