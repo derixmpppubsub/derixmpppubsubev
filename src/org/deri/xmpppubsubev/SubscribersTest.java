@@ -62,6 +62,7 @@ public class SubscribersTest {
     }
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         try {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
@@ -104,6 +105,9 @@ public class SubscribersTest {
             logger.error(e);
         } catch (InterruptedException e) {
             logger.error(e);
+            long end = System.currentTimeMillis();
+            long total = end -start;
+            logger.info("Total time publishers running: " + total);
         }
 //        } finally {
 //            for(Subscriber s : st.subscribers.values()) {

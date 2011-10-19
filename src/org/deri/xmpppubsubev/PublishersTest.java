@@ -242,8 +242,8 @@ public class PublishersTest {
 //        if ((nSubs == 1) && (nPubs == 1)) {
 //            nTests = 30;
 //        }
-
-        for(int nTest=1; nTest<=nTests; nTest=nTest++) {
+        logger.debug(nTests);
+        for(int nTest=1; nTest<=nTests; nTest++) {
             logger.debug("nTest: " + nTest);
 
             for(int nSub=1; nSub<=nSubs; nSub=nSub*10) {
@@ -306,6 +306,7 @@ public class PublishersTest {
 
     public static void main(String[] args) {
         try {
+            long start = System.currentTimeMillis();
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
             Logger.getRootLogger().setLevel(Level.DEBUG);
@@ -338,6 +339,9 @@ public class PublishersTest {
 
             st.tests(nTests, nSubs, nPubs, nTriples);
 
+            long end = System.currentTimeMillis();
+            long total = end -start;
+            logger.info("Total time publishers running: " + total);
             // give time to all the messages to send
             //Thread.sleep(100*nPubs*nSubs);
             //insertTestTriples(1, 1000, "http://localhost:8000/update/");

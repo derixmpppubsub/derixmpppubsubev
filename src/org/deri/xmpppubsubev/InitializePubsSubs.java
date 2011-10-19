@@ -56,6 +56,7 @@ public class InitializePubsSubs {
             for (int i=1; i<=nPubs; i++) {
                 nodeName = String.format(nodeNameTemplate, i);
                 s.subscribeIfNotSubscribedTo(nodeName);
+//                s.subscribeTo(nodeName);
                 logger.debug("subscribed to " + nodeName);
             }
             s.disconnect();
@@ -77,7 +78,7 @@ public class InitializePubsSubs {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
 
-            XMPPConnection.DEBUG_ENABLED = true;
+//            XMPPConnection.DEBUG_ENABLED = true;
 
             logger.debug("Entering application.");
             String usage = "InitializePubsSubs xmppserver nSubs nPubs";
