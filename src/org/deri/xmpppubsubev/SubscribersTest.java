@@ -18,7 +18,7 @@ public class SubscribersTest {
     public HashMap<String, Subscriber> subscribers;
     public String xmppServer;
     public String endpoint;
-    public static String userPassTemplate = "%spass";
+    public static String userPassTemplate = "pass";
     public static String subNameTemplate = "sub%s";
     public static String fileHeadersTemplate = "nTests,nSubs,nPubs,nTriples,"
             + "subName,pubName,tPubStore, tPushMsg, tSubStore, tTotal\n";
@@ -50,7 +50,7 @@ public class SubscribersTest {
         try {
             for (int nSub=1; nSub<=nSubs; nSub++) {
                 subName = String.format(subNameTemplate, nSub);
-                subPass = String.format(userPassTemplate, subName);
+                subPass = String.format(userPassTemplate);
                 s = new Subscriber(subName, subPass, xmppServer);
                 subscribers.put(subName, s);
                 s.addListenerToAllNodes(subName);

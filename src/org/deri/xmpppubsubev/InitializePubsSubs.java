@@ -37,13 +37,13 @@ public class InitializePubsSubs {
         for (int nPub=1; nPub<=nPubs; nPub++) {
             logger.debug("nPub: "+nPub);
             pubName = String.format(pubNameTemplate, nPub);
-            pubPass = String.format(userPassTemplate, pubName);
+            pubPass = String.format(userPassTemplate);
             p = new Publisher(pubName, pubPass , xmppServer);
             nodeName = String.format(nodeNameTemplate, nPub);
             p.getOrCreateNode(nodeName);
-            p.disconnect();
-            p = null;
-            Runtime.getRuntime().gc();
+//            p.disconnect();
+//            p = null;
+//            Runtime.getRuntime().gc();
         }
         String subName = "";
         String subPass = "";
@@ -59,9 +59,9 @@ public class InitializePubsSubs {
 //                s.subscribeTo(nodeName);
                 logger.debug("subscribed to " + nodeName);
             }
-            s.disconnect();
-            s = null;
-            Runtime.getRuntime().gc();
+//            s.disconnect();
+//            s = null;
+//            Runtime.getRuntime().gc();
         }
     }
 
@@ -70,7 +70,7 @@ public class InitializePubsSubs {
         int port=5222;
 
         String pubNameTemplate = "pub%s";
-        String userPassTemplate = "%spass";
+        String userPassTemplate = "pass";
         String nodeNameTemplate = "node%s";
         String subNameTemplate = "sub%s";
 

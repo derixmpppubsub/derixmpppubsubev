@@ -15,7 +15,7 @@ public class PublishersTest {
     public String xmppServer;
     public String endpoint;
     public static String pubNameTemplate = "pub%s";
-    public static String userPassTemplate = "%spass";
+    public static String userPassTemplate = "pass";
     public static String nodeNameTemplate = "node%s";
     public static String subNameTemplate = "sub%s";
     public static String postNameTemplate = "post%s";
@@ -157,7 +157,7 @@ public class PublishersTest {
                 pubName = String.format(pubNameTemplate, nPub);
                 p = publishers.get(pubName);
                 if (p == null) {
-                    pubPass = String.format(userPassTemplate, pubName);
+                    pubPass = String.format(userPassTemplate);
                     p = new Publisher(pubName, pubPass , xmppServer);
                     nodeName = String.format(nodeNameTemplate, nPub);
 //                    p.getOrCreateNode(nodeName);
