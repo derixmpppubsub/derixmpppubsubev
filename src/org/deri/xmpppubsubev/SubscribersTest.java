@@ -67,7 +67,7 @@ public class SubscribersTest {
             logger.setLevel(Level.DEBUG);
             Logger.getRootLogger().setLevel(Level.DEBUG);
 
-            XMPPConnection.DEBUG_ENABLED = true;
+//            XMPPConnection.DEBUG_ENABLED = true;
 
             String usage = "SubscribersTest xmppserver nSubs";
             String usageExample = "SubscribersTest 192.168.1.2 1";
