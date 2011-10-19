@@ -26,11 +26,11 @@ public class PublishersTest {
             "<http://ecp-alpha/semantic/post/%s> "
             + "<http://purl.org/dc/elements/1.1/creator> "
             + "<http://ecp-alpha/semantic/employee/%s> .";
-    public static String fileHeadersTemplate = "nTests,nSubs,nPubs,nTriples,"
-            + "subName,pubName,tPubStore, tPushMsg, tSubStore, tTotal\n";
+    public static String fileHeadersTemplate = "nTests,nTest,nSubs,nPubs,nTriples,"
+            + "subName,pubName,tPubStore,tPushMsg,tSubStore,tTotal\n";
     public static String msgIdTemplate = "%s,%s,%s,%s,%s,%s,%s";
-                    //nTests,nSubs,nPubs,nTriples,pubName,tPubStore,tStartMsg
-    public static String fileNameTemplate = "results/nSubs%snPubs%snTriples%s.csv";
+            //nTests, nTest, nSubs, nPubs, nTriples,pubName, tPubStore
+    public static String fileNameTemplate = "results/nTests%snSubs%snPubs%snTriples%s.csv";
     public static int MAXTRIPLES = 8200;
 
     static Logger logger = Logger.getLogger(PublishersTest.class);
@@ -123,10 +123,10 @@ public class PublishersTest {
      * @param tPubStore
      * @return
      */
-    public String createMsgId(int nTests, int nSubs, int nPubs, int nTriples,
+    public String createMsgId(int nTests, int nTest, int nSubs, int nPubs, int nTriples,
             String pubName, Long tPubStore) { //, Long tStartMsg
-          String msgId = String.format(msgIdTemplate, nTests, nSubs, nPubs, nTriples,
-                  pubName, tPubStore); //, tStartMsg
+          String msgId = String.format(msgIdTemplate, nTests, nTest, nSubs, nPubs, nTriples,
+                  pubName, tPubStore.toString()); //, tStartMsg
         return msgId;
     }
 
@@ -140,7 +140,7 @@ public class PublishersTest {
      * @throws QueryTypeException
      * @throws InterruptedException
      */
-    public void runPublishers(int nTests, int nSubs, int nPubs, int nTriples)
+    public void runPublishers(int nTests, int nTest, int nSubs, int nPubs, int nTriples)
             throws XMPPException, IOException, QueryTypeException,
             InterruptedException {
         //logger.debug("number of publishers " + Integer.toString(nPubs));
@@ -168,6 +168,7 @@ public class PublishersTest {
 //                logger.debug(queryString);
                 Object[] ret = SPARQLWrapper.runQuery(queryString, endpoint, false);
                 tPubStore = (Long)ret[1];
+//                logger.debug("tpubstore: " + tPubStore);
                 triples = (String)ret[0];
 //                logger.debug(triples);
 //                if (triples != null) {
@@ -175,11 +176,12 @@ public class PublishersTest {
 //                } else {
 //                    logger.debug("no triples");
 //                }
-                String msgId = this.createMsgId(nTests, nSubs, nPubs, nTriples,
+                String msgId = this.createMsgId(nTests, nTest, nSubs, nPubs, nTriples,
                         pubName, tPubStore);
+//                logger.debug(msgId);
                 SPARQLQuery query = new SPARQLQuery();
                 query.wrapTriples(triples);
-                //logger.debug(query.toXML());
+//                logger.debug(query.toXML());
                 p.publishQuery(query.toXML(), msgId);
                 logger.debug("Published query.");
             }
@@ -199,7 +201,7 @@ public class PublishersTest {
      * @throws QueryTypeException
      * @throws InterruptedException
      */
-    public void initializeRunPublishers(int nTests, int nSubs, int nPubs, int nTriples)
+    public void initializeRunPublishers(int nTests, int nTest, int nSubs, int nPubs, int nTriples)
             throws XMPPException, IOException, QueryTypeException,
             InterruptedException {
 
@@ -216,7 +218,7 @@ public class PublishersTest {
         // 4s-httpd db
         initializeStore(nPubs, nTriples);
 
-        this.runPublishers(nTests, nSubs, nPubs, nTriples);
+        this.runPublishers(nTests, nTest,  nSubs, nPubs, nTriples);
 
         this.publishers = null;
     }
@@ -231,29 +233,30 @@ public class PublishersTest {
      * @throws QueryTypeException
      * @throws InterruptedException
      */
-    public void tests(int nSubs, int nPubs, int nTriples)
+    public void tests(int nTests, int nSubs, int nPubs, int nTriples)
             throws XMPPException, IOException, QueryTypeException,
             InterruptedException {
 
-        int nTests = 1;
+//        int nTests = 1;
 //        double nSubs = java.lang.Math.pow(10, Integer.parseInt(t)-1);
-        if ((nSubs == 1) && (nPubs == 1)) {
-            nTests = 30;
-        }
+//        if ((nSubs == 1) && (nPubs == 1)) {
+//            nTests = 30;
+//        }
 
         for(int nTest=1; nTest<=nTests; nTest=nTest++) {
+            logger.debug("nTest: " + nTest);
 
             for(int nSub=1; nSub<=nSubs; nSub=nSub*10) {
-                logger.debug("nSubs: " + nSub);
+                logger.debug("nSub: " + nSub);
 
                 for(int nPub = 1; nPub<=nPubs; nPub=nPub*10) {
-                    logger.debug("nPubs : " + nPub);
+                    logger.debug("nPub : " + nPub);
                     //init
 
                     for(int nT=1; nT<=nTriples; nT=nT*10) {
                         logger.debug("nTriples: " + nT);
 
-                        this.runPublishers(nTests, nSubs, nPubs, nTriples);
+                        this.runPublishers(nTests, nTest, nSub, nPub, nT);
                     }
                 }
             }
@@ -329,11 +332,11 @@ public class PublishersTest {
             logger.info("The file header created by the subscribers will be: "
                     + fileHeadersTemplate);
             logger.info("The file name created by the subscribers will be: "
-                    + String.format(fileNameTemplate, nSubs, nPubs, nTriples));
+                    + String.format(fileNameTemplate, nTests, nSubs, nPubs, nTriples));
 
             PublishersTest st = new PublishersTest(xmppServer,endpoint);
 
-            st.runPublishers(nTests, nSubs, nPubs, nTriples);
+            st.tests(nTests, nSubs, nPubs, nTriples);
 
             // give time to all the messages to send
             //Thread.sleep(100*nPubs*nSubs);
