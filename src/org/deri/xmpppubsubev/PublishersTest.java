@@ -8,6 +8,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import org.deri.xmpppubsub.*;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
 public class PublishersTest {
@@ -336,8 +337,9 @@ public class PublishersTest {
                     + String.format(fileNameTemplate, nTests, nSubs, nPubs, nTriples));
 
             PublishersTest st = new PublishersTest(xmppServer,endpoint);
-
-            st.tests(nTests, nSubs, nPubs, nTriples);
+//
+//            st.tests(nTests, nSubs, nPubs, nTriples);
+            st.runPublishers(nTests, nTests, nSubs, nPubs, nTriples);
 
             long end = System.currentTimeMillis();
             long total = end -start;
@@ -350,6 +352,9 @@ public class PublishersTest {
             logger.error(e);
         } catch(XMPPException e) {
             logger.error(e);
+            System.out.println(e.getMessage() );
+            System.out.println(e.getXMPPError() );
+            e.printStackTrace();
         } catch (QueryTypeException e) {
             logger.error(e);
         } catch (InterruptedException e) {
