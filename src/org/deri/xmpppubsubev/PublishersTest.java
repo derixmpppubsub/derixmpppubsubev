@@ -188,7 +188,7 @@ public class PublishersTest {
             }
         } catch(OutOfMemoryError e){
             System.gc();
-            logger.error(e);
+            logger.error(e.getMessage());
         }
     }
 
@@ -306,8 +306,8 @@ public class PublishersTest {
 //    }
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         try {
-            long start = System.currentTimeMillis();
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
             Logger.getRootLogger().setLevel(Level.DEBUG);
@@ -341,24 +341,22 @@ public class PublishersTest {
 //            st.tests(nTests, nSubs, nPubs, nTriples);
             st.runPublishers(nTests, nTests, nSubs, nPubs, nTriples);
 
-            long end = System.currentTimeMillis();
-            long total = end -start;
-            logger.info("Total time publishers running: " + total);
             // give time to all the messages to send
             //Thread.sleep(100*nPubs*nSubs);
             //insertTestTriples(1, 1000, "http://localhost:8000/update/");
 
         } catch(IOException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch(XMPPException e) {
-            logger.error(e);
-            System.out.println(e.getMessage() );
-            System.out.println(e.getXMPPError() );
-            e.printStackTrace();
+            logger.error(e.getMessage());
         } catch (QueryTypeException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch (InterruptedException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
+        } finally {
+            long end = System.currentTimeMillis();
+            long total = end -start;
+            logger.info("Total time publishers running: " + total);
         }
 
     }

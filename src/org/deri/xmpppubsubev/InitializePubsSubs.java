@@ -98,9 +98,9 @@ public class InitializePubsSubs {
             ips.initialize(nSubs, nPubs, pubNameTemplate, userPassTemplate,
                     nodeNameTemplate, subNameTemplate);
         } catch (InterruptedException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch (XMPPException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         }
     }
 }

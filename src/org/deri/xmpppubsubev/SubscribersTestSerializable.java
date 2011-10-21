@@ -1,6 +1,7 @@
 package org.deri.xmpppubsubev;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -14,7 +15,7 @@ import org.jivesoftware.smack.XMPPException;
  * @author Julia Anaya
  *
  */
-public class SubscribersTest {
+public class SubscribersTestSerializable implements Serializable {
     public HashMap<String, Subscriber> subscribers;
     public String xmppServer;
     public String endpoint;
@@ -26,14 +27,14 @@ public class SubscribersTest {
 //                    //nTests,nSubs,nPubs,nTriples,pubName,tPubStore,tStartMsg
     public static String fileNameTemplate = "results/nSubs%snPubs%snTriples%s.csv";
 
-    static Logger logger = Logger.getLogger(SubscribersTest.class);
+    static Logger logger = Logger.getLogger(SubscribersTestSerializable.class);
 
     /**
      *
      * @param xmppServer
      * @param endpoint
      */
-    public SubscribersTest(String xmppServer, String endpoint) {
+    public SubscribersTestSerializable(String xmppServer, String endpoint) {
         subscribers = new HashMap<String, Subscriber>();
         this.xmppServer = xmppServer;
         this.endpoint = endpoint;
@@ -90,21 +91,35 @@ public class SubscribersTest {
             logger.info("The file name created by the subscribers will be: "
                     + fileName);
 
-            SubscribersTest st = new SubscribersTest(xmppServer, endpoint);
-            st.runSubscribers(nSubs);
+            SubscribersTestSerializable st = new SubscribersTestSerializable(xmppServer, endpoint);
+                    st.runSubscribers(nSubs);
 
+             FileOutputStream fos = null;
+             ObjectOutputStream out = null;
+             try
+             {
+               fos = new FileOutputStream(filename);
+               out = new ObjectOutputStream(fos);
+               out.writeObject(time);
+               out.close();
+             }
+             catch(IOException ex)
+             {
+               ex.printStackTrace();
+             }
+             
             while (true) {
                 Thread.sleep(1000);
             }
 
         } catch(XMPPException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch(IOException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch (QueryTypeException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch (InterruptedException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
             long end = System.currentTimeMillis();
             long total = end -start;
             logger.info("Total time publishers running: " + total);

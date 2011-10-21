@@ -47,17 +47,12 @@ public class SubscribersTest {
         String subName = "";
         String subPass = "";
         Subscriber s = null;
-        try {
-            for (int nSub=1; nSub<=nSubs; nSub++) {
-                subName = String.format(subNameTemplate, nSub);
-                subPass = String.format(userPassTemplate);
-                s = new Subscriber(subName, subPass, xmppServer);
-                subscribers.put(subName, s);
-                s.addListenerToAllNodes(subName);
-            }
-        } catch(OutOfMemoryError e){
-            System.gc();
-            System.out.println("out of memory");
+        for (int nSub=1; nSub<=nSubs; nSub++) {
+            subName = String.format(subNameTemplate, nSub);
+            subPass = String.format(userPassTemplate);
+            s = new Subscriber(subName, subPass, xmppServer);
+            subscribers.put(subName, s);
+            s.addListenerToAllNodes(subName);
         }
     }
 
@@ -97,23 +92,25 @@ public class SubscribersTest {
                 Thread.sleep(1000);
             }
 
+        } catch(OutOfMemoryError e){
+            logger.error(e.getMessage());
         } catch(XMPPException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch(IOException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch (QueryTypeException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         } catch (InterruptedException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
+
+        } finally {
             long end = System.currentTimeMillis();
             long total = end -start;
             logger.info("Total time publishers running: " + total);
-        }
-//        } finally {
 //            for(Subscriber s : st.subscribers.values()) {
 //                s.disconnect();
 //            }
-//        }
+        }
 
     }
 }
