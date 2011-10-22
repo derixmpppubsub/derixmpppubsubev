@@ -108,9 +108,9 @@ public class SubscribersTestSerializable implements Serializable {
 //                    st.runSubscribers(nSubs);
 
 
-//            while (true) {
+            while (true) {
                 Thread.sleep(600000);
-//            }
+            }
 
         } catch(XMPPException e) {
             logger.error(e.getMessage());

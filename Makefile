@@ -15,7 +15,9 @@ LIBS = $(subst ${space},:,$(strip $(wildcard ${LIBDIR}/*.jar)))
 # linux
 SRCS = $(shell find ${SRCDIR} -name \*.java)
 
-JVMFLAGS    := -Dfile.encoding=UTF-8 -Xmx2048m
+JVMFLAGS    := -Dfile.encoding=UTF-8 -Xmx2048m 
+#-XX:OnOutOfMemoryError="kill -3 pid" -Xss128k
+# -Djava.rmi.server.hostname=ip.address
 JAVACFLAGS  := -d ${BUILDDIR}
 CLASSPATH   := ${LIBS}
 MAINCLASS   := org.deri.xmpppubsub.PublishersTest
