@@ -76,6 +76,8 @@ public class SubscribersTestSerializable implements Serializable {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
         SubscribersTestSerializable st = null;
+             FileOutputStream fos = null;
+             ObjectOutputStream out = null;
         try {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
@@ -107,6 +109,17 @@ public class SubscribersTestSerializable implements Serializable {
                     xmppServer, endpoint, nSubs);
 //                    st.runSubscribers(nSubs);
 
+             try {
+               logger.info("writing dump in may try");
+               fos = new FileOutputStream("subscribers-dump");
+               out = new ObjectOutputStream(fos);
+               out.writeObject(st);
+               out.close();
+             }
+             catch(IOException ex)
+             {
+               ex.printStackTrace();
+             }
 
             while (true) {
                 Thread.sleep(600000);
@@ -124,6 +137,17 @@ public class SubscribersTestSerializable implements Serializable {
             long total = end -start;
             logger.info("Total time publishers running: " + total);
 
+             try {
+               logger.info("writing dump in interrupted exception");
+               fos = new FileOutputStream("subscribers-dump");
+               out = new ObjectOutputStream(fos);
+               out.writeObject(st);
+               out.close();
+             }
+             catch(IOException ex)
+             {
+               ex.printStackTrace();
+             }
         } finally {
             long end = System.currentTimeMillis();
             long total = end -start;
@@ -131,10 +155,8 @@ public class SubscribersTestSerializable implements Serializable {
 //            for(Subscriber s : st.subscribers.values()) {
 //                s.disconnect();
 //            }
-             FileOutputStream fos = null;
-             ObjectOutputStream out = null;
-             try
-             {
+             try {
+               logger.info("writing dump in finally");
                fos = new FileOutputStream("subscribers-dump");
                out = new ObjectOutputStream(fos);
                out.writeObject(st);

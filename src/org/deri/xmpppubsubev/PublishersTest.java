@@ -261,6 +261,7 @@ public class PublishersTest {
                     }
                 }
             }
+            Thread.sleep(50*nSubs*nPubs*nTriples);
         }
 
         this.publishers = null;
