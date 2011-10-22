@@ -1,6 +1,8 @@
 package org.deri.xmpppubsubev;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import org.apache.log4j.BasicConfigurator;
@@ -38,6 +40,15 @@ public class SubscribersTestSerializable implements Serializable {
         subscribers = new HashMap<String, Subscriber>();
         this.xmppServer = xmppServer;
         this.endpoint = endpoint;
+    }
+
+    public SubscribersTestSerializable(String xmppServer, String endpoint,
+            int nSubs) throws XMPPException, QueryTypeException,
+            InterruptedException, IOException {
+        subscribers = new HashMap<String, Subscriber>();
+        this.xmppServer = xmppServer;
+        this.endpoint = endpoint;
+        this.runSubscribers(nSubs);
     }
 
     public void runSubscribers(int nSubs)
@@ -91,23 +102,24 @@ public class SubscribersTestSerializable implements Serializable {
             logger.info("The file name created by the subscribers will be: "
                     + fileName);
 
-            SubscribersTestSerializable st = new SubscribersTestSerializable(xmppServer, endpoint);
-                    st.runSubscribers(nSubs);
+            SubscribersTestSerializable st = new SubscribersTestSerializable(
+                    xmppServer, endpoint, nSubs);
+//                    st.runSubscribers(nSubs);
 
              FileOutputStream fos = null;
              ObjectOutputStream out = null;
              try
              {
-               fos = new FileOutputStream(filename);
+               fos = new FileOutputStream("subscribers-dump");
                out = new ObjectOutputStream(fos);
-               out.writeObject(time);
+               out.writeObject(st);
                out.close();
              }
              catch(IOException ex)
              {
                ex.printStackTrace();
              }
-             
+
             while (true) {
                 Thread.sleep(1000);
             }
@@ -123,12 +135,15 @@ public class SubscribersTestSerializable implements Serializable {
             long end = System.currentTimeMillis();
             long total = end -start;
             logger.info("Total time publishers running: " + total);
-        }
-//        } finally {
+
+        } finally {
+            long end = System.currentTimeMillis();
+            long total = end -start;
+            logger.info("Total time publishers running: " + total);
 //            for(Subscriber s : st.subscribers.values()) {
 //                s.disconnect();
 //            }
-//        }
+        }
 
     }
 }
