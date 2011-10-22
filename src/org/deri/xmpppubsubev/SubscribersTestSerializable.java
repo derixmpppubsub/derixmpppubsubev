@@ -75,6 +75,7 @@ public class SubscribersTestSerializable implements Serializable {
 
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
+        SubscribersTestSerializable st = null;
         try {
             BasicConfigurator.configure();
             logger.setLevel(Level.DEBUG);
@@ -102,27 +103,14 @@ public class SubscribersTestSerializable implements Serializable {
             logger.info("The file name created by the subscribers will be: "
                     + fileName);
 
-            SubscribersTestSerializable st = new SubscribersTestSerializable(
+            st = new SubscribersTestSerializable(
                     xmppServer, endpoint, nSubs);
 //                    st.runSubscribers(nSubs);
 
-             FileOutputStream fos = null;
-             ObjectOutputStream out = null;
-             try
-             {
-               fos = new FileOutputStream("subscribers-dump");
-               out = new ObjectOutputStream(fos);
-               out.writeObject(st);
-               out.close();
-             }
-             catch(IOException ex)
-             {
-               ex.printStackTrace();
-             }
 
-            while (true) {
-                Thread.sleep(1000);
-            }
+//            while (true) {
+                Thread.sleep(600000);
+//            }
 
         } catch(XMPPException e) {
             logger.error(e.getMessage());
@@ -143,6 +131,19 @@ public class SubscribersTestSerializable implements Serializable {
 //            for(Subscriber s : st.subscribers.values()) {
 //                s.disconnect();
 //            }
+             FileOutputStream fos = null;
+             ObjectOutputStream out = null;
+             try
+             {
+               fos = new FileOutputStream("subscribers-dump");
+               out = new ObjectOutputStream(fos);
+               out.writeObject(st);
+               out.close();
+             }
+             catch(IOException ex)
+             {
+               ex.printStackTrace();
+             }
         }
 
     }
