@@ -258,10 +258,11 @@ public class PublishersTest {
                         logger.debug("nTriples: " + nT);
 
                         this.runPublishers(nTests, nTest, nSub, nPub, nT);
+      
+                        Thread.sleep(50*nSubs*nPubs*nTriples);
                     }
                 }
             }
-            Thread.sleep(50*nSubs*nPubs*nTriples);
         }
 
         this.publishers = null;
