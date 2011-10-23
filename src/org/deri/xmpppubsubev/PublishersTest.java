@@ -258,7 +258,7 @@ public class PublishersTest {
                         logger.debug("nTriples: " + nT);
 
                         this.runPublishers(nTests, nTest, nSub, nPub, nT);
-      
+                        // give time to all the messages to send
                         Thread.sleep(50*nSubs*nPubs*nTriples);
                     }
                 }
@@ -339,13 +339,8 @@ public class PublishersTest {
                     + String.format(fileNameTemplate, nTests, nSubs, nPubs, nTriples));
 
             PublishersTest st = new PublishersTest(xmppServer,endpoint);
-//
-//            st.tests(nTests, nSubs, nPubs, nTriples);
-            st.runPublishers(nTests, nTests, nSubs, nPubs, nTriples);
-
-            // give time to all the messages to send
-            //Thread.sleep(100*nPubs*nSubs);
-            //insertTestTriples(1, 1000, "http://localhost:8000/update/");
+            st.tests(nTests, nSubs, nPubs, nTriples);
+//            st.runPublishers(nTests, nTests, nSubs, nPubs, nTriples);
 
         } catch(IOException e) {
             logger.error(e.getMessage());
