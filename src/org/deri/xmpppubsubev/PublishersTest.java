@@ -131,6 +131,27 @@ public class PublishersTest {
         return msgId;
     }
 
+    public void loadPublishers(int nPubs)
+            throws XMPPException, InterruptedException {
+
+            String pubName = "";
+            String pubPass = "";
+            String nodeName = "";
+            Publisher p = null;
+            //loop to have in memory all publishers before sending
+            for (int nPub=1; nPub<=nPubs; nPub++) {
+                pubName = String.format(pubNameTemplate, nPub);
+                if (publishers.get(pubName) == null) {
+                    pubPass = String.format(userPassTemplate);
+                    p = new Publisher(pubName, pubPass , xmppServer);
+                    nodeName = String.format(nodeNameTemplate, nPub);
+    //                    p.getOrCreateNode(nodeName);
+                    p.getNode(nodeName);
+                    publishers.put(pubName,p);
+                }
+            }
+    }
+
     /**
      *
      * @param nSubs
@@ -150,21 +171,11 @@ public class PublishersTest {
             String triples = "";
 //            SPARQLWrapper sw = new SPARQLWrapper();
             String pubName = "";
-            String pubPass = "";
-            String nodeName = "";
             Publisher p = null;
             Long tPubStore = null;
             for (int nPub=1; nPub<=nPubs; nPub++) {
                 pubName = String.format(pubNameTemplate, nPub);
                 p = publishers.get(pubName);
-                if (p == null) {
-                    pubPass = String.format(userPassTemplate);
-                    p = new Publisher(pubName, pubPass , xmppServer);
-                    nodeName = String.format(nodeNameTemplate, nPub);
-//                    p.getOrCreateNode(nodeName);
-                    p.getNode(nodeName);
-                    publishers.put(pubName,p);
-                }
                 String queryString = queryPosts(pubName, nTriples);
 //                logger.debug(queryString);
                 Object[] ret = SPARQLWrapper.runQuery(queryString, endpoint, false);
@@ -251,6 +262,7 @@ public class PublishersTest {
 //                logger.debug("nSub: " + nSub);
 
                 for(int nPub = 1; nPub<=nPubs; nPub=nPub*10) {
+                    this.loadPublishers(nPub);
                     logger.debug("nPub : " + nPub);
                     //init
 
@@ -259,7 +271,9 @@ public class PublishersTest {
 
                         this.runPublishers(nTests, nTest, nSubs, nPub, nT);
                         // give time to all the messages to send
-                        Thread.sleep(50*nSubs*nPubs*nTriples);
+                        logger.debug("sleeping for " + 5*nSubs*nPubs*nTriples);
+                        Thread.sleep(50*nSubs*nPub);
+                        logger.debug("end sleep");
                     }
                 }
 //            }

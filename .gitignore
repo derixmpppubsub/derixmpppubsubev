@@ -8,3 +8,5 @@ lib/*.jar
 dist/
 config/
 *~
+/4store-1.1.3/.pc/
+kk/
