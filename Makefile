@@ -15,9 +15,10 @@ LIBS = $(subst ${space},:,$(strip $(wildcard ${LIBDIR}/*.jar)))
 # linux
 SRCS = $(shell find ${SRCDIR} -name \*.java)
 
-JVMFLAGS    := -Dfile.encoding=UTF-8 -Xmx2048m 
+JVMFLAGS    := -Dfile.encoding=UTF-8 -Xmx2048m
 #-XX:OnOutOfMemoryError="kill -3 pid" -Xss128k
 # -Djava.rmi.server.hostname=ip.address
+# -Dsmack.debugEnabled=true
 JAVACFLAGS  := -d ${BUILDDIR}
 CLASSPATH   := ${LIBS}
 MAINCLASS   := org.deri.xmpppubsub.PublishersTest
@@ -30,13 +31,13 @@ prep:
 build: prep
 	# version ant
 	${ANT} compile
-	
+
 	# version without ant
 	#CLASSPATH=${CLASSPATH} ${JAVAC} ${JAVACFLAGS} ${SRCS}
 
 jar: build
 	${ANT} jar
-	# 
+	#
 
 clean:
 	rm -rf ${BUILDDIR}
