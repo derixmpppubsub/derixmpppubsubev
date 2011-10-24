@@ -254,6 +254,7 @@ public class PublishersTest {
 //        if ((nSubs == 1) && (nPubs == 1)) {
 //            nTests = 30;
 //        }
+        int s;
         logger.debug(nTests);
         for(int nTest=1; nTest<=nTests; nTest++) {
             logger.debug("nTest: " + nTest);
@@ -271,8 +272,9 @@ public class PublishersTest {
 
                         this.runPublishers(nTests, nTest, nSubs, nPub, nT);
                         // give time to all the messages to send
-                        logger.debug("sleeping for " + 5*nSubs*nPubs*nTriples);
-                        Thread.sleep(50*nSubs*nPub);
+                        s = nSubs*10+nPub*10+nT*10+10000;
+                        logger.debug("sleeping for " + s);
+                        Thread.sleep(s);
                         logger.debug("end sleep");
                     }
                 }
