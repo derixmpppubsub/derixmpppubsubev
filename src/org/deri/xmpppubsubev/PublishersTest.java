@@ -173,16 +173,12 @@ public class PublishersTest {
             String pubName = "";
             Publisher p = null;
             Long tPubStore = null;
-            String queryString;
-            Object[] ret;
-            String msgId;
-            HashMap<String,String[]> pubTriples = null;
-            //prepare the triples for all publishers before to begin sending them
             for (int nPub=1; nPub<=nPubs; nPub++) {
                 pubName = String.format(pubNameTemplate, nPub);
-                queryString = queryPosts(pubName, nTriples);
+                p = publishers.get(pubName);
+                String queryString = queryPosts(pubName, nTriples);
 //                logger.debug(queryString);
-                ret = SPARQLWrapper.runQuery(queryString, endpoint, false);
+                Object[] ret = SPARQLWrapper.runQuery(queryString, endpoint, false);
                 tPubStore = (Long)ret[1];
 //                logger.debug("tpubstore: " + tPubStore);
                 triples = (String)ret[0];
@@ -192,20 +188,13 @@ public class PublishersTest {
 //                } else {
 //                    logger.debug("no triples");
 //                }
-                msgId = this.createMsgId(nTests, nTest, nSubs, nPubs, nTriples,
+                String msgId = this.createMsgId(nTests, nTest, nSubs, nPubs, nTriples,
                         pubName, tPubStore);
 //                logger.debug(msgId);
                 SPARQLQuery query = new SPARQLQuery();
                 query.wrapTriples(triples);
 //                logger.debug(query.toXML());
-                pubTriples.put(pubName, new String[] {msgId, query.toXML()});
-            }
-
-            for (int nPub=1; nPub<=nPubs; nPub++) {
-                pubName = String.format(pubNameTemplate, nPub);
-                p = publishers.get(pubName);
-                String[] pubTriple = pubTriples.get(pubName);
-                p.publishQuery(pubTriple[1], pubTriple[0]);
+                p.publishQuery(query.toXML(), msgId);
                 logger.debug("Published query.");
             }
         } catch(OutOfMemoryError e){
