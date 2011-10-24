@@ -247,8 +247,8 @@ public class PublishersTest {
         for(int nTest=1; nTest<=nTests; nTest++) {
             logger.debug("nTest: " + nTest);
 
-            for(int nSub=1; nSub<=nSubs; nSub=nSub*10) {
-                logger.debug("nSub: " + nSub);
+//            for(int nSub=1; nSub<=nSubs; nSub=nSub*10) {
+//                logger.debug("nSub: " + nSub);
 
                 for(int nPub = 1; nPub<=nPubs; nPub=nPub*10) {
                     logger.debug("nPub : " + nPub);
@@ -257,12 +257,12 @@ public class PublishersTest {
                     for(int nT=1; nT<=nTriples; nT=nT*10) {
                         logger.debug("nTriples: " + nT);
 
-                        this.runPublishers(nTests, nTest, nSub, nPub, nT);
+                        this.runPublishers(nTests, nTest, nSubs, nPub, nT);
                         // give time to all the messages to send
                         Thread.sleep(50*nSubs*nPubs*nTriples);
                     }
                 }
-            }
+//            }
         }
 
         this.publishers = null;
