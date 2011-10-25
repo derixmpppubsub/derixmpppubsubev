@@ -43,6 +43,16 @@ Setup the XMPP hub computer
 
 #. You can now finish the Openfire installation through the web at localhost:9090. In the DB setup step, choose MySQL, write "jdbc:mysql://localhost:3306/openfire" as Connection URL, and enter the username and password you used when creating the db.
 
+#. Configure openfire to have memory enough
+
+  $ sudo vim /etc/init.d/openfire
+  
+  Modify the line DAMEON_OPTS like:
+  
+  DAEMON_OPTS="$DAEMON_OPTS  -Xss256k -Xms768m -Xmx1024m -Djava.net.preferIPv4Stack=true  -server -DopenfireHome=${DAEMON_DIR} \
+ -Dopenfire.lib.dir=${DAEMON_LIB} -classpath ${DAEMON_LIB}/startup.jar\
+ -jar ${DAEMON_LIB}/startup.jar"
+
 
 Setup subscribers computer
 ============================
@@ -101,7 +111,7 @@ You can do it in three different ways:
 
 #. Download and compile the code as explained above and run :
 
-  $ java -Xmx2048m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:../derixmpppubsub/build/classes  org.deri.xmpppubsubev.InitializePubSubs numberPublishers numberSubscribers numberTest
+  $ java -Xss256k -Xms768m -Xmx768m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:../derixmpppubsub/build/classes  org.deri.xmpppubsubev.InitializePubSubs numberPublishers numberSubscribers numberTest
 
 #. import one of the tests db availabe in data/, for instance:
 
@@ -117,7 +127,7 @@ And after importing the db, start it:
 
 If you need to trace Openfire or give it more memory, run it in this way:
   $ sudo su -s /bin/bash - openfire
-  $ strace -f -e \!futex,gettimeofday -o openfire.strace /usr/lib/jvm/java-6-sun/bin/java  -Xmx1024m -server -DopenfireHome=/usr/share/openfire -Dopenfire.lib.dir=/usr/share/openfire/lib -classpath /usr/share/openfire/lib/startup.jar -jar /usr/share/openfire/lib/startup.jar
+  $ strace -f -e \!futex,gettimeofday -o openfire.strace /usr/lib/jvm/java-6-sun/bin/java  -Xss256k -Xms768m -Xmx1024m -server -DopenfireHome=/usr/share/openfire -Dopenfire.lib.dir=/usr/share/openfire/lib -classpath /usr/share/openfire/lib/startup.jar -jar /usr/share/openfire/lib/startup.jar
 
 Initialize subscribers
 --------------------------
@@ -134,7 +144,7 @@ Initialize subscribers
 Run Subscribers
 ----------------
 
-  $ java -Xmx2048m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar org.deri.xmpppubsubev.SubscribersTest numberSubscribers numberTest xmppServerIP
+  $ java -Xss256k -Xms768m -Xmx768m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar org.deri.xmpppubsubev.SubscribersTest numberSubscribers numberTest xmppServerIP
 
 Initialize publishers
 ----------------------
@@ -159,6 +169,6 @@ Or it will be imported automatically depending on the test
 Run Publishers
 ---------------
 
-  $ java -Xmx2048m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:../derixmpppubsub/build/classes org.deri.xmpppubsubev.PublishersTest xmppServerIP numberTest
+  $ java -Xss256k -Xms768m -Xmx1024m -Dfile.encoding=UTF-8 -classpath build/classes:lib/log4j-1.2.16.jar:lib/jena-2.6.4.jar:lib/arq-2.8.7.jar:lib/smack.jar:lib/smackx.jar:lib/smackx-debug.jar:../derixmpppubsub/build/classes org.deri.xmpppubsubev.PublishersTest xmppServerIP numberTest
 
 Enjoy!
